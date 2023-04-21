@@ -25,6 +25,7 @@ if __name__ == '__main__':
             query, chatgpt_ans = text.strip().split('<ANSWER>')
             texts.append(query + '<ANSWER>')
             pids.append(pid)
+            chatgpt_anses.append(chatgpt_ans)
         #     if pid % 1000 == 0:
         #         print(gpu_device, pid, query[:10], chatgpt_ans[:10])
         #     line = line.strip()
