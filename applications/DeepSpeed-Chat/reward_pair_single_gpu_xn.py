@@ -66,7 +66,7 @@ if __name__ == '__main__':
                                  top_k=50,
                                  top_p=0.95)
         res = tokenizer.batch_decode(outputs, skip_special_tokens=True)[-1]
-        print(pid, res)
+        # print(pid, res)
         wf.writelines('%s\t%s\n' % (pid, res))
         # res_dict = {'photo_id': pid, 'output': res}
         # wf.write(json.dumps(res_dict, ensure_ascii=False) + '\n')
