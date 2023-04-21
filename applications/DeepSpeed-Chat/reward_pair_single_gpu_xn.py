@@ -66,17 +66,15 @@ if __name__ == '__main__':
         inputs = tokenizer(text, return_tensors='pt').input_ids
         inputs = inputs.to('cuda:0')
         try:
-            outputs = model.generate(inputs,
-                                     max_new_tokens=2000,
-                                     do_sample=True,
-                                     top_k=50,
-                                     top_p=0.95)
+            with torch.no_grad():
+                outputs = model.generate(inputs,
+                                         max_new_tokens=2000,
+                                         do_sample=True,
+                                         top_k=50,
+                                         top_p=0.95)
             res = tokenizer.batch_decode(outputs, skip_special_tokens=True)[-1]
-            # print(pid, res)
             wf.writelines(
                 '{}\t{}<ANSWER-ChatGPT>{}\n'.format(pid, res, chatgpt_ans))
-            # res_dict = {'photo_id': pid, 'output': res}
-            # wf.write(json.dumps(res_dict, ensure_ascii=False) + '\n')
             wf.flush()
         except Exception as e:
             print("===!!!Exception", e)
