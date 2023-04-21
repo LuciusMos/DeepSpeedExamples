@@ -30,7 +30,8 @@ for pid, text in zip(pids, texts):
     inputs = tokenizer(text, return_tensors="pt").input_ids
     inputs = inputs.to('cuda:0')
     # outputs = model.generate(inputs, max_new_tokens=500, do_sample=False, num_beams=1)
-    outputs = model.generate(inputs, max_new_tokens=1000, do_sample=True, top_k=50, top_p=0.95)
+    outputs = model.generate(inputs, max_new_tokens=1000,
+                             do_sample=True, top_k=50, top_p=0.95)
     res = tokenizer.batch_decode(outputs, skip_special_tokens=True)[-1]
     out = res
     print(pid, out)

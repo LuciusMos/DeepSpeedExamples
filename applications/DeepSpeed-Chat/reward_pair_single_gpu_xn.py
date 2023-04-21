@@ -17,13 +17,16 @@ if __name__ == '__main__':
 
     pids = []
     texts = []
+    chatgpt_anses = []
     with open(inference_file, 'r') as f:
         for pid, line in enumerate(f):
             #     pid, text = line.strip().split('\t')
             text = line.strip()
-            query, _ = text.strip().split('<ANSWER>')
+            query, chatgpt_ans = text.strip().split('<ANSWER>')
             texts.append(query + '<ANSWER>')
             pids.append(pid)
+        #     if pid % 1000 == 0:
+        #         print(gpu_device, pid, query[:10], chatgpt_ans[:10])
         #     line = line.strip()
         #     items = line.split('\t')
         #     if len(items) != 3:
@@ -35,8 +38,10 @@ if __name__ == '__main__':
         #     texts.append(text[:1500])
 
     segment_len = math.ceil(len(texts) / 8.)
-    _pids = pids[gpu_device * segment_len:(gpu_device + 1) * segment_len]
-    _texts = texts[gpu_device * segment_len:(gpu_device + 1) * segment_len]
+    _pids = pids[gpu_device * segment_len: (gpu_device + 1) * segment_len]
+    _texts = texts[gpu_device * segment_len: (gpu_device + 1) * segment_len]
+    _chatgpt_anses = chatgpt_anses[gpu_device *
+                                   segment_len: (gpu_device + 1) * segment_len]
 
     tokenizer = AutoTokenizer.from_pretrained("bigscience/bloomz-7b1")
     model_config = AutoConfig.from_pretrained('bigscience/bloomz-7b1')
@@ -57,20 +62,24 @@ if __name__ == '__main__':
     #     model.eval()
 
     wf = open(output_file.format(gpu_device), 'w')
-    for pid, text in tqdm(zip(_pids, _texts)):
+    for pid, text, chatgpt_ans in tqdm(zip(_pids, _texts, _chatgpt_anses)):
         inputs = tokenizer(text, return_tensors='pt').input_ids
         inputs = inputs.to('cuda:0')
-        outputs = model.generate(inputs,
-                                 max_new_tokens=2000,
-                                 do_sample=True,
-                                 top_k=50,
-                                 top_p=0.95)
-        res = tokenizer.batch_decode(outputs, skip_special_tokens=True)[-1]
-        # print(pid, res)
-        wf.writelines('%s\t%s\n' % (pid, res))
-        # res_dict = {'photo_id': pid, 'output': res}
-        # wf.write(json.dumps(res_dict, ensure_ascii=False) + '\n')
-        wf.flush()
+        try:
+            outputs = model.generate(inputs,
+                                     max_new_tokens=2000,
+                                     do_sample=True,
+                                     top_k=50,
+                                     top_p=0.95)
+            res = tokenizer.batch_decode(outputs, skip_special_tokens=True)[-1]
+            # print(pid, res)
+            wf.writelines(
+                '{}\t{}<ANSWER-ChatGPT>{}\n'.format(pid, res, chatgpt_ans))
+            # res_dict = {'photo_id': pid, 'output': res}
+            # wf.write(json.dumps(res_dict, ensure_ascii=False) + '\n')
+            wf.flush()
+        except Exception as e:
+            print("===!!!Exception", e)
     wf.close()
 
 #     indus_dic = {
