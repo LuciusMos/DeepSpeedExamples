@@ -38,6 +38,9 @@ def log_init(model_name, stime=None):
 
 
 class DeepSpeedRLHFEngine():
+    '''
+    RLHF engine is responsible for creating models, loading checkpoints, ds-initialize models/optims/lr-schedulers
+    '''
 
     def __init__(self, actor_model_name_or_path, critic_model_name_or_path,
                  tokenizer, args, num_total_iters):

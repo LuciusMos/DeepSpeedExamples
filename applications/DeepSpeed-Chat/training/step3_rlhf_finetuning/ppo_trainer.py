@@ -66,7 +66,6 @@ class DeepSpeedPPOTrainer():
         self.lam = 0.95
 
     def _generate_sequence(self, prompts):
-
         max_min_length = self.max_answer_seq_len + prompts.shape[1]
 
         with torch.no_grad():
@@ -105,8 +104,7 @@ class DeepSpeedPPOTrainer():
             output_ref = self.ref_model(seq, attention_mask=attention_mask)
             reward_score = self.reward_model.forward_value(
                 seq, attention_mask,
-                prompt_length=self.prompt_length)['chosen_end_scores'].detach(
-                )
+                prompt_length=self.prompt_length)['chosen_end_scores'].detach()
             values = self.critic_model.forward_value(
                 seq, attention_mask, return_value_only=True).detach()[:, :-1]
 
@@ -141,7 +139,7 @@ class DeepSpeedPPOTrainer():
 
     def train_rlhf(self, inputs):
         # train the rlhf mode here
-        ### process the old outputs
+        # 1.process the old outputs
         prompts = inputs['prompts']
         log_probs = inputs['logprobs']
         ref_log_probs = inputs['ref_logprobs']
@@ -161,7 +159,7 @@ class DeepSpeedPPOTrainer():
             advantages, returns = self.get_advantages_and_returns(
                 old_values, old_rewards, start)
 
-        ### process the new outputs
+        # 2.process the new outputs
         batch = {'input_ids': seq, "attention_mask": attention_mask}
         actor_prob = self.actor_model(**batch, use_cache=False).logits
         actor_log_prob = gather_log_probs(actor_prob[:, :-1, :],
@@ -183,7 +181,7 @@ class DeepSpeedPPOTrainer():
         return actor_loss, critic_loss
 
     def actor_loss_fn(self, logprobs, old_logprobs, advantages, mask):
-        ## policy gradient loss
+        # policy gradient loss
         log_ratio = (logprobs - old_logprobs) * mask
         ratio = torch.exp(log_ratio)
         pg_loss1 = -advantages * ratio
@@ -193,7 +191,7 @@ class DeepSpeedPPOTrainer():
         return pg_loss
 
     def critic_loss_fn(self, values, old_values, returns, mask):
-        ## value loss
+        # value loss
         values_clipped = torch.clamp(
             values,
             old_values - self.cliprange_value,

@@ -73,7 +73,7 @@ class DahoasRmstaticDataset(PromptRawDataset):
         return sample['prompt'] + sample['rejected']
 
 
-# English dataset
+# English dataset; Reward
 class DahoasFullhhrlhfDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):
@@ -104,7 +104,7 @@ class DahoasFullhhrlhfDataset(PromptRawDataset):
         return sample['prompt'] + sample['rejected']
 
 
-# English dataset
+# English dataset; Reward
 class DahoasSyntheticinstructgptjpairwiseDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):
@@ -147,11 +147,10 @@ class DahoasSyntheticinstructgptjpairwiseDataset(PromptRawDataset):
         return " Human: " + sample['prompt'] + " Assistant: " + sample['chosen']
 
     def get_prompt_and_rejected(self, sample):
-        return " Human: " + sample['prompt'] + " Assistant: " + sample[
-            'rejected']
+        return " Human: " + sample['prompt'] + " Assistant: " + sample['rejected']
 
 
-# English dataset
+# English dataset; Reward
 class YitingxieRlhfrewarddatasetsDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):
@@ -182,7 +181,7 @@ class YitingxieRlhfrewarddatasetsDataset(PromptRawDataset):
         return sample['prompt'] + sample['rejected']
 
 
-# English dataset
+# English dataset; Reward
 class OpenaiWebgptcomparisonsDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):
@@ -256,7 +255,7 @@ class OpenaiWebgptcomparisonsDataset(PromptRawDataset):
             'full_text'] + " Assistant: " + response
 
 
-# English dataset
+# English dataset; Reward
 class StanfordnlpSHPDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):

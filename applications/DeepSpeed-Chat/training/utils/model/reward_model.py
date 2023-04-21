@@ -92,11 +92,11 @@ class RewardModel(nn.Module):
                 ) if len(r_inds) > self.num_padding_at_beginning else seq_len
                 end_ind = max(c_ind, r_ind)
                 divergence_ind = check_divergence[0]
-            assert divergence_ind > 0
+            assert divergence_ind >= 0   # issue#338
             c_truncated_reward = chosen_reward[divergence_ind:end_ind]
             r_truncated_reward = rejected_reward[divergence_ind:end_ind]
             chosen_mean_scores.append(
-                chosen_reward[c_ind - 1])  #use the end score for refrnence
+                chosen_reward[c_ind - 1])  # use the end score for refrnence
             rejected_mean_scores.append(rejected_reward[r_ind - 1])
 
             loss += -torch.log(

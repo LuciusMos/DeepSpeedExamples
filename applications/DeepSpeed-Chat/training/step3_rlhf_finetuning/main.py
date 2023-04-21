@@ -18,6 +18,7 @@ for prompt_batch in prompt_train_dataloader:
 """
 import argparse
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import random
 import torch
 from torch.utils.data import DataLoader, RandomSampler
@@ -378,6 +379,7 @@ def main():
                                               fast_tokenizer=True)
     tokenizer.pad_token = tokenizer.eos_token
 
+    # create dataloaders (prompt + unsupervised)
     prompt_train_dataloader, unsupervised_train_dataloader, num_total_iters = create_datasets(
         args=args, tokenizer=tokenizer, train_phase=3)
 
@@ -391,10 +393,13 @@ def main():
 
     args.end_of_conversation_token = "<|endoftext|>"
 
+    # create ppo trainer
     ppo_trainer = DeepSpeedPPOTrainerUnsupervised if unsupervised_training_enabled else DeepSpeedPPOTrainer
     trainer = ppo_trainer(rlhf_engine, args)
 
-    # first number is how many experience-batch to generate, second number is the training batch size, which is the micro-batch size used
+    # TODO: mini_dataset is to seperate dataloader batch to several GPUs
+    # First parameter is how many experience-batch to generate
+    # Second parameter is the training batch size, which is the micro-batch size used
     exp_mini_dataset = MiniDataset(args.generation_batch_numbers,
                                    args.per_device_mini_train_batch_size)
     unsup_mini_dataset = MiniDataset(args.generation_batch_numbers,
@@ -422,6 +427,7 @@ def main():
                 prompts = prompts[:, length - args.max_prompt_seq_len:]
                 raise ValueError("Prompt length is too long")
 
+            # out is a dict with keys: 'prompts', 'logprobs', 'ref_logprobs', 'value', 'rewards', 'input_ids', "attention_mask"
             out = trainer.generate_experience(prompts)
             exp_dataset = exp_mini_dataset.add(out)
 
