@@ -18,8 +18,9 @@ if __name__ == '__main__':
     pids = []
     texts = []
     with open(inference_file, 'r') as f:
-        for line in f:
-            pid, text = line.strip().split('\t')
+        for pid, line in enumerate(f):
+            #     pid, text = line.strip().split('\t')
+            text = line.strip()
             query, _ = text.strip().split('<ANSWER>')
             texts.append(query + '<ANSWER>')
             pids.append(pid)
