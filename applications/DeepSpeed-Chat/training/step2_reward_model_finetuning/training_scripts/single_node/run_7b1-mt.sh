@@ -9,7 +9,7 @@ if [ "$OUTPUT" == "" ]; then
     OUTPUT=./output
 fi
 if [ "$ZERO_STAGE" == "" ]; then
-    ZERO_STAGE=0
+    ZERO_STAGE=3
 fi
 mkdir -p $OUTPUT
 
@@ -17,7 +17,7 @@ deepspeed main.py \
    --data_path phd_qualified_seeds \
    --data_split 2,4,4 \
    --model_name_or_path bigscience/bloomz-7b1-mt \
-   --num_padding_at_beginning 1 \
+   --num_padding_at_beginning 0 \
    --per_device_train_batch_size 8 \
    --per_device_eval_batch_size 8 \
    --max_seq_len 512 \
