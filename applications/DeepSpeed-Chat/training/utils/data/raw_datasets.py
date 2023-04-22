@@ -127,8 +127,8 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
                     'rejected': ours_answer,
                 })
         random.shuffle(self.raw_datasets)
-        self.use_ratio = 0.5
-        self.train_ratio = 0.8
+        self.use_ratio = 1.0
+        self.train_ratio = 0.7
 
     def get_train_data(self):
         return self.raw_datasets[: int(self.use_ratio)][: int(self.train_ratio)]
