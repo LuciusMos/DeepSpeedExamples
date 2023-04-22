@@ -5,6 +5,7 @@
 from datasets import load_dataset
 from torch.utils.data import Subset
 import re
+import random
 
 
 # The template prompt dataset class that all new dataset porting needs to
@@ -87,6 +88,53 @@ class DahoasFullhhrlhfDataset(PromptRawDataset):
 
     def get_eval_data(self):
         return self.raw_datasets["test"]
+
+    def get_prompt(self, sample):
+        return sample['prompt']
+
+    def get_chosen(self, sample):
+        return sample['chosen']
+
+    def get_rejected(self, sample):
+        return sample['rejected']
+
+    def get_prompt_and_chosen(self, sample):
+        return sample['prompt'] + sample['chosen']
+
+    def get_prompt_and_rejected(self, sample):
+        return sample['prompt'] + sample['rejected']
+
+# Chineses dataset(PHD); Reward
+
+
+class PhdQualifiedSeedsDataset(PromptRawDataset):
+
+    def __init__(self, output_path, seed, local_rank):
+        # pid   <QUESTION>...<ANSWER>...<ANSWER-ChatGPT>...
+        super().__init__(output_path, seed, local_rank)
+        self.dataset_name = "phd_qualified_seeds"
+        self.dataset_name_clean = "phd_qualified_seeds"
+        self.raw_datasets = []
+        with open('/home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/dataset/ \
+                  phd_qualified_seeds_inference_output_all.csv', 'r') as f:
+            for line in f:
+                pid, text = line.strip().split('\t')
+                query, answers = text.strip().split('<ANSWER>')
+                ours_answer, chatgpt_answer = answers.split('<ANSWER-ChatGPT>')
+                self.raw_datasets.append({
+                    'promt': query + '<ANSWER>',
+                    'chosen': chatgpt_answer,
+                    'rejected': ours_answer,
+                })
+        random.shuffle(self.raw_datasets)
+        self.use_ratio = 0.5
+        self.train_ratio = 0.8
+
+    def get_train_data(self):
+        return self.raw_datasets[: int(self.use_ratio)][: int(self.train_ratio)]
+
+    def get_eval_data(self):
+        return self.raw_datasets[: int(self.use_ratio)][int(self.train_ratio):]
 
     def get_prompt(self, sample):
         return sample['prompt']

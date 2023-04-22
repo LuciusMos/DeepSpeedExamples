@@ -18,39 +18,31 @@ from . import raw_datasets
 
 def get_raw_dataset(dataset_name, output_path, seed, local_rank):
     if dataset_name == "Dahoas/rm-static":
-        return raw_datasets.DahoasRmstaticDataset(output_path, seed,
-                                                  local_rank)
+        return raw_datasets.DahoasRmstaticDataset(output_path, seed, local_rank)
     elif dataset_name == "Dahoas/full-hh-rlhf":
-        return raw_datasets.DahoasFullhhrlhfDataset(output_path, seed,
-                                                    local_rank)
+        return raw_datasets.DahoasFullhhrlhfDataset(output_path, seed, local_rank)
+    elif dataset_name == "phd_qualified_seeds":
+        return raw_datasets.PhdQualifiedSeedsDataset(output_path, seed, local_rank)
     elif dataset_name == "Dahoas/synthetic-instruct-gptj-pairwise":
-        return raw_datasets.DahoasSyntheticinstructgptjpairwiseDataset(
-            output_path, seed, local_rank)
+        return raw_datasets.DahoasSyntheticinstructgptjpairwiseDataset(output_path, seed, local_rank)
     elif dataset_name == "yitingxie/rlhf-reward-datasets":
-        return raw_datasets.YitingxieRlhfrewarddatasetsDataset(
-            output_path, seed, local_rank)
+        return raw_datasets.YitingxieRlhfrewarddatasetsDataset(output_path, seed, local_rank)
     elif dataset_name == "openai/webgpt_comparisons":
-        return raw_datasets.OpenaiWebgptcomparisonsDataset(
-            output_path, seed, local_rank)
+        return raw_datasets.OpenaiWebgptcomparisonsDataset(output_path, seed, local_rank)
     elif dataset_name == "stanfordnlp/SHP":
-        return raw_datasets.StanfordnlpSHPDataset(output_path, seed,
-                                                  local_rank)
+        return raw_datasets.StanfordnlpSHPDataset(output_path, seed, local_rank)
     elif dataset_name == "wangrui6/Zhihu-KOL":
-        return raw_datasets.Wangrui6ZhihuKOLDataset(output_path, seed,
-                                                    local_rank)
+        return raw_datasets.Wangrui6ZhihuKOLDataset(output_path, seed, local_rank)
     elif dataset_name == "Cohere/miracl-zh-queries-22-12":
-        return raw_datasets.CohereMiraclzhqueries2212Dataset(
-            output_path, seed, local_rank)
+        return raw_datasets.CohereMiraclzhqueries2212Dataset(output_path, seed, local_rank)
     elif dataset_name == "Hello-SimpleAI/HC3-Chinese":
-        return raw_datasets.HelloSimpleAIHC3ChineseDataset(
-            output_path, seed, local_rank)
+        return raw_datasets.HelloSimpleAIHC3ChineseDataset(output_path, seed, local_rank)
     elif dataset_name == "mkqa-Chinese":
         return raw_datasets.MkqaChineseDataset(output_path, seed, local_rank)
     elif dataset_name == "mkqa-Japanese":
         return raw_datasets.MkqaJapaneseDataset(output_path, seed, local_rank)
     elif dataset_name == "Cohere/miracl-ja-queries-22-12":
-        return raw_datasets.CohereMiracljaqueries2212Dataset(
-            output_path, seed, local_rank)
+        return raw_datasets.CohereMiracljaqueries2212Dataset(output_path, seed, local_rank)
     elif dataset_name == "lmqg/qg_jaquad":
         return raw_datasets.LmqgQgjaquadDataset(output_path, seed, local_rank)
     elif dataset_name == "lmqg/qag_jaquad":
@@ -129,7 +121,7 @@ class PromptDataset(Dataset):
             return self.chosen_dataset[idx]["input_ids"], self.chosen_dataset[idx]["attention_mask"], \
                 self.reject_dataset[idx]["input_ids"], self.reject_dataset[idx]["attention_mask"]
         elif self.train_phase == 3:
-            return self.prompt_dataset[idx]["input_ids"],self.prompt_dataset[idx]["attention_mask"], \
+            return self.prompt_dataset[idx]["input_ids"], self.prompt_dataset[idx]["attention_mask"], \
                 self.pad_token_id
 
 
@@ -360,7 +352,7 @@ class DataCollatorRLHF:
                                    padding_value=0,
                                    batch_first=True)
 
-        ### make sure the final ouput is a seqence of 2**?
+        # make sure the final ouput is a seqence of 2**?
         length = prompt.size()[-1]
         pad_length = self.max_token_len - length
         if pad_length > 0:
