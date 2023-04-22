@@ -12,7 +12,7 @@ if __name__ == '__main__':
                     text = text.strip()
                 else:
                     text += line.strip()
-                    if '<ANSWER>' in text and '<ANSWER-ChatGPT>' in text:
+                    if text.count('<QUESTION>') == 1 and text.count('<ANSWER>') == 1 and text.count('<ANSWER-ChatGPT>') == 1:
                         texts.append(text)
                         pids.append(pid)
 
