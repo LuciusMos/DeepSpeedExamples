@@ -23,6 +23,8 @@ if __name__ == '__main__':
             #     pid, text = line.strip().split('\t')
             text = line.strip()
             query, chatgpt_ans = text.strip().split('<ANSWER>')
+            query = query.strip()
+            chatgpt_ans = chatgpt_ans.strip()
             texts.append(query + '<ANSWER>')
             pids.append(pid)
             chatgpt_anses.append(chatgpt_ans)

@@ -7,13 +7,14 @@ if __name__ == '__main__':
     for i in range(8):
         with open(seperate_files.format(i), 'r') as f:
             for lineno, line in enumerate(f):
-                if lineno % 2 == 0:
-                    pid, text1 = line.strip().split('\t')
-                    text1 = text1.strip()
+                if line.strip().split('\t')[0].isdigit():
+                    pid, text = line.strip().split('\t')
+                    text = text.strip()
                 else:
-                    text2 = line.strip()
-                    texts.append(text1 + text2)
-                    pids.append(pid)
+                    text += line.strip()
+                    if '<ANSWER>' in text and '<ANSWER-ChatGPT>' in text:
+                        texts.append(text)
+                        pids.append(pid)
 
     wf = open("./dataset/phd_qualified_seeds_inference_output_all.csv", 'w')
     for pid, text in tqdm(zip(pids, texts)):
