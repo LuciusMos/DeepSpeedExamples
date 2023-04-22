@@ -121,7 +121,7 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
                 query, answers = text.strip().split('<ANSWER>')
                 ours_answer, chatgpt_answer = answers.split('<ANSWER-ChatGPT>')
                 self.raw_datasets.append({
-                    'promt': query + '<ANSWER>',
+                    'prompt': query + '<ANSWER>',
                     'chosen': chatgpt_answer,
                     'rejected': ours_answer,
                 })
