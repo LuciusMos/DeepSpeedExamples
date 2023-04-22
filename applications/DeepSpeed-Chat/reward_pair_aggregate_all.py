@@ -1,4 +1,4 @@
-import tqdm
+from tqdm import tqdm
 
 if __name__ == '__main__':
     seperate_files = "./dataset/phd_qualified_seeds_inference_output_{}.csv"
