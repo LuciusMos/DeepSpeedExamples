@@ -45,8 +45,8 @@ dse_url = "https://github.com/microsoft/DeepSpeedExamples/tree/master/applicatio
 # python train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-7b1-mt --deployment-type single_node --output-dir bloomz-7b1-mt --step 1 2 3
 
 # == reward_model debug
-# python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir bloomz-560m  --step 2
-# b training/step2_reward_model_finetuning/main.py:241
+# python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2
+# b training/step2_reward_model_finetuning/main.py:302
 
 
 def parse_args():
