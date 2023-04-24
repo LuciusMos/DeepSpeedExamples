@@ -67,6 +67,7 @@ def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
                                 split_name, data_split, split_index,
                                 data_size):
     index_file_name = f"{output_path}/{dataset_name}_seed{seed}_{split_name}_{data_split}_{split_index}.npy"
+    # /tmp/data_files/phd_qualified_seeds_seed1234_train_2,4,4_1.npy
     if not os.path.isfile(index_file_name) and local_rank <= 0:
         splits = [float(s) for s in data_split.split(',')]
         splits_sum = sum(splits)
@@ -224,6 +225,10 @@ def create_dataset(local_rank, dataset_name, data_split, output_path,
     eval_dataset = create_dataset_split(eval_dataset, raw_dataset, train_phase,
                                         tokenizer, end_of_conversation_token,
                                         max_seq_len)
+    print('train_dataset', train_dataset.prompt_dataset[:2])
+    print('train_index', train_index[:2])
+    print('eval_dataset', eval_dataset, eval_dataset.prompt_dataset[:2])
+    print('eval_index', eval_index[:2])
     return train_dataset, eval_dataset
 
 
