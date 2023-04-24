@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # DeepSpeed Team
-from utils.module.lora import convert_linear_layer_to_lora, convert_lora_to_linear_layer, only_optimize_lora_parameters
-from utils.ds_utils import get_train_ds_config
-from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, get_optimizer_grouped_parameters, save_zero_three_model
-from utils.data.data_utils import create_prompt_dataset, DataCollatorReward
 from utils.model.model_utils import create_critic_model
+from utils.data.data_utils import create_prompt_dataset, DataCollatorReward
+from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, get_optimizer_grouped_parameters, save_zero_three_model
+from utils.ds_utils import get_train_ds_config
+from utils.module.lora import convert_linear_layer_to_lora, convert_lora_to_linear_layer, only_optimize_lora_parameters
 import argparse
 import os
 import math
@@ -187,8 +187,7 @@ def main():
     ds_config[
         'train_micro_batch_size_per_gpu'] = args.per_device_train_batch_size
     ds_config[
-        'train_batch_size'] = args.per_device_train_batch_size * torch.distributed.get_world_size(
-    ) * args.gradient_accumulation_steps
+        'train_batch_size'] = args.per_device_train_batch_size * torch.distributed.get_world_size() * args.gradient_accumulation_steps
 
     # If passed along, set the training seed now.
     set_random_seed(args.seed)
