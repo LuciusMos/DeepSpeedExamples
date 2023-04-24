@@ -42,7 +42,11 @@ step_dirs = {
 model_type = {1: "actor", 2: "reward", 3: "step3"}
 dse_url = "https://github.com/microsoft/DeepSpeedExamples/tree/master/applications/DeepSpeed-Chat/"
 
-# python train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-7b1-mt --deployment-type single_node  --output-dir bloomz-7b1-mt
+# python train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-7b1-mt --deployment-type single_node --output-dir bloomz-7b1-mt --step 1 2 3
+
+# == reward_model debug
+# python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir bloomz-560m  --step 2
+# b training/step2_reward_model_finetuning/main.py:241
 
 
 def parse_args():
@@ -60,13 +64,21 @@ def parse_args():
         # type=lambda x: x.replace("facebook/opt-", ""),
         # default="1.3b",
         # choices=("1.3b", "6.7b", "13b", "66b"),
-        help="Which bigscience/bloomz* model to use for Actor (step 1)",
+        type=lambda x: x.replace("bigscience/", ""),
+        default="bloomz-7b1-mt",
+        choices=("bloomz-560m", "bloomz-7b1",
+                 "bloomz-7b1-mt", "bloomz", "bloomz-mt"),
+        help="Which bigscience/bloomz model to use for Actor (step 1)",
     )
     parser.add_argument(
         "--reward-model",
         # type=lambda x: x.replace("facebook/opt-", ""),
         # default="350m",
         # choices=("350m"),
+        type=lambda x: x.replace("bigscience/", ""),
+        default="bloomz-7b1-mt",
+        choices=("bloomz-560m", "bloomz-7b1",
+                 "bloomz-7b1-mt", "bloomz", "bloomz-mt"),
         help="Which bigscience/bloomz* model to use for Reward (step 2)",
     )
     parser.add_argument(
@@ -107,10 +119,10 @@ def parse_args():
 
 
 def get_model_size(args, step_num):
-    # if step_num == 3:
-    #     return get_model_size(args, 1)
-    # return getattr(args, f"{model_type[step_num]}_model")
-    return "7b1-mt"
+    if step_num == 3:
+        return get_model_size(args, 1)
+    return getattr(args, f"{model_type[step_num]}_model")
+    # return "7b1-mt"
 
 
 def get_zero_stage(args, step_num):
