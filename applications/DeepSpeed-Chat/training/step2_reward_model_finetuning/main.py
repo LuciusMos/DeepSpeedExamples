@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # DeepSpeed Team
+from utils.module.lora import convert_linear_layer_to_lora, convert_lora_to_linear_layer, only_optimize_lora_parameters
+from utils.ds_utils import get_train_ds_config
+from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, get_optimizer_grouped_parameters, save_zero_three_model
+from utils.data.data_utils import create_prompt_dataset, DataCollatorReward
+from utils.model.model_utils import create_critic_model
 import argparse
 import os
 import math
@@ -23,17 +28,11 @@ from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from utils.model.model_utils import create_critic_model
-from utils.data.data_utils import create_prompt_dataset, DataCollatorReward
-from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, get_optimizer_grouped_parameters, save_zero_three_model
-from utils.ds_utils import get_train_ds_config
-from utils.module.lora import convert_linear_layer_to_lora, convert_lora_to_linear_layer, only_optimize_lora_parameters
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description=
-        "Finetune a transformers model on a causal language modeling task")
+        description="Finetune a transformers model on a causal language modeling task")
     parser.add_argument('--data_path',
                         nargs='*',
                         default=['Dahoas/rm-static'],
@@ -55,16 +54,14 @@ def parse_args():
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        help=
-        "Path to pretrained model or model identifier from huggingface.co/models.",
+        help="Path to pretrained model or model identifier from huggingface.co/models.",
         required=True,
     )
     parser.add_argument(
         "--num_padding_at_beginning",
         type=int,
         default=1,
-        help=
-        "OPT model has a fixed number (1) of padding tokens at the beginning of the input. "
+        help="OPT model has a fixed number (1) of padding tokens at the beginning of the input. "
         "We did not see this in other models but keep it as an option for now.",
     )
     parser.add_argument(
@@ -89,8 +86,7 @@ def parse_args():
         "--learning_rate",
         type=float,
         default=5e-5,
-        help=
-        "Initial learning rate (after the potential warmup period) to use.",
+        help="Initial learning rate (after the potential warmup period) to use.",
     )
     parser.add_argument("--weight_decay",
                         type=float,
@@ -104,8 +100,7 @@ def parse_args():
         "--gradient_accumulation_steps",
         type=int,
         default=1,
-        help=
-        "Number of updates steps to accumulate before performing a backward/update pass.",
+        help="Number of updates steps to accumulate before performing a backward/update pass.",
     )
     parser.add_argument(
         "--lr_scheduler_type",
@@ -147,7 +142,7 @@ def parse_args():
         type=int,
         default=0,
         help='ZeRO optimization stage for Actor model (and clones).')
-    ## LoRA for efficient training setting
+    # LoRA for efficient training setting
     parser.add_argument("--lora_dim",
                         type=int,
                         default=0,
@@ -193,7 +188,7 @@ def main():
         'train_micro_batch_size_per_gpu'] = args.per_device_train_batch_size
     ds_config[
         'train_batch_size'] = args.per_device_train_batch_size * torch.distributed.get_world_size(
-        ) * args.gradient_accumulation_steps
+    ) * args.gradient_accumulation_steps
 
     # If passed along, set the training seed now.
     set_random_seed(args.seed)
@@ -314,6 +309,7 @@ def main():
             batch = to_device(batch, device)
             outputs = rm_model(**batch, use_cache=False)
             loss = outputs["loss"]
+            print('【【rm loss and output', loss, outputs.keys())
             rm_model.backward(loss)
             rm_model.step()
             mean_loss += loss.item()

@@ -21,6 +21,8 @@ deepspeed --num_gpus 1 main.py \
    --gradient_accumulation_steps 4 \
    --per_device_train_batch_size 2 \
    --per_device_eval_batch_size 2 \
+   --max_seq_len 512 \
+   --learning_rate 5e-4 \
    --seed 1234 \
    --zero_stage $ZERO_STAGE \
    --deepspeed \
