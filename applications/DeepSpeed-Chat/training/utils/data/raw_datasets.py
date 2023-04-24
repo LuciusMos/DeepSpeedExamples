@@ -132,10 +132,10 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
         self.train_ratio = 0.7
 
     def get_train_data(self):
-        return self.raw_datasets[: int(self.train_ratio) * len(self.raw_datasets)]
+        return self.raw_datasets[: int(self.train_ratio * len(self.raw_datasets))]
 
     def get_eval_data(self):
-        return self.raw_datasets[int(self.train_ratio) * len(self.raw_datasets):]
+        return self.raw_datasets[int(self.train_ratio * len(self.raw_datasets)):]
 
     def get_prompt(self, sample):
         return sample['prompt']
