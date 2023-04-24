@@ -127,13 +127,15 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
                 })
         random.shuffle(self.raw_datasets)
         self.use_ratio = 1.0
+        self.raw_datasets = self.raw_datasets[: int(
+            self.use_ratio) * len(self.raw_datasets)]
         self.train_ratio = 0.7
 
     def get_train_data(self):
-        return self.raw_datasets[: int(self.use_ratio)][: int(self.train_ratio)]
+        return self.raw_datasets[: int(self.train_ratio) * len(self.raw_datasets)]
 
     def get_eval_data(self):
-        return self.raw_datasets[: int(self.use_ratio)][int(self.train_ratio):]
+        return self.raw_datasets[int(self.train_ratio) * len(self.raw_datasets):]
 
     def get_prompt(self, sample):
         return sample['prompt']
