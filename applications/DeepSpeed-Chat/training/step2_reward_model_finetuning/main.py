@@ -187,17 +187,15 @@ def main():
 
     ds_config = get_train_ds_config(offload=args.offload,
                                     stage=args.zero_stage)
-    ds_config[
-        'train_micro_batch_size_per_gpu'] = args.per_device_train_batch_size
-    ds_config[
-        'train_batch_size'] = args.per_device_train_batch_size * torch.distributed.get_world_size() * args.gradient_accumulation_steps
+    ds_config['train_micro_batch_size_per_gpu'] = args.per_device_train_batch_size
+    ds_config['train_batch_size'] = args.per_device_train_batch_size * torch.distributed.get_world_size() * \
+        args.gradient_accumulation_steps
 
     # If passed along, set the training seed now.
     set_random_seed(args.seed)
     torch.distributed.barrier()
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path,
-                                              fast_tokenizer=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, fast_tokenizer=True, , padding_side="right")
     tokenizer.pad_token = tokenizer.eos_token
 
     rm_model = create_critic_model(args.model_name_or_path,

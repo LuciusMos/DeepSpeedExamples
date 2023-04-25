@@ -21,7 +21,7 @@ deepspeed main.py \
    --per_device_train_batch_size 4 \
    --per_device_eval_batch_size 4 \
    --gradient_accumulation_steps 2 \
-   --max_seq_len 512 \
+   --max_seq_len 1024 \
    --learning_rate 5e-5 \
    --weight_decay 0.1 \
    --num_train_epochs 1 \
