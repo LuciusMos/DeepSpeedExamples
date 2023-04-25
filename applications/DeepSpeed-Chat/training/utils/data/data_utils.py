@@ -202,7 +202,7 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
 def create_dataset(local_rank, dataset_name, data_split, output_path,
                    train_phase, seed, tokenizer, end_of_conversation_token,
                    max_seq_len):
-    print('【【data_utils/create_dataset')
+    print('【【data_utils/create_dataset, train_phase={}'.format(train_phase))
     raw_dataset = get_raw_dataset(dataset_name, output_path, seed, local_rank)
     train_dataset = raw_dataset.get_train_data()
     print('train_dataset', len(train_dataset), train_dataset[:2])

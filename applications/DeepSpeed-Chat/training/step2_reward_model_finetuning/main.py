@@ -311,10 +311,12 @@ def main():
         rm_model.train()
         mean_loss = 0
         for step, batch in enumerate(train_dataloader):
+            print('【【step2_reward_model_finetuning/main.py')
+            print('batch', batch.shape)
             batch = to_device(batch, device)
             outputs = rm_model(**batch, use_cache=False)
             loss = outputs["loss"]
-            print('【【rm loss and output', loss, outputs.keys())
+            print('rm_model output', outputs)
             rm_model.backward(loss)
             rm_model.step()
             mean_loss += loss.item()

@@ -6,8 +6,8 @@ import torch
 from torch import nn
 
 
-## Note that the following code is modified from
-## https://github.com/CarperAI/trlx/blob/main/examples/summarize_rlhf/reward_model/reward_model.py
+# Note that the following code is modified from
+# https://github.com/CarperAI/trlx/blob/main/examples/summarize_rlhf/reward_model/reward_model.py
 class RewardModel(nn.Module):
 
     def __init__(self, base_model, tokenizer, num_padding_at_beginning=0):
@@ -51,9 +51,12 @@ class RewardModel(nn.Module):
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
             use_cache=use_cache)
-
+        print('【reward_model inner output')
+        print('transformer_outputs', transformer_outputs.shape)
         hidden_states = transformer_outputs[0]
+        print('hidden_states is transformer_outputs[0]', hidden_states)
         rewards = self.v_head(hidden_states).squeeze(-1)
+        print('rewards', rewards.shape, rewards)
         chosen_mean_scores = []
         rejected_mean_scores = []
 
