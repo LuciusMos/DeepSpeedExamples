@@ -245,7 +245,8 @@ def main():
         for step, batch in enumerate(eval_dataloader):
             batch = to_device(batch, device)
             with torch.no_grad():
-                outputs = model(**batch)
+                outputs = model(**batch, print_msg=None if step >
+                                0 else '【evaluation_reward')
 
             chosen = outputs["chosen_mean_scores"]
             rejected = outputs["rejected_mean_scores"]
@@ -311,10 +312,9 @@ def main():
         rm_model.train()
         mean_loss = 0
         for step, batch in enumerate(train_dataloader):
-            print('【【step2_reward_model_finetuning/main.py')
-            print('batch', batch.shape)
             batch = to_device(batch, device)
-            outputs = rm_model(**batch, use_cache=False)
+            outputs = rm_model(**batch, use_cache=False,
+                               print_msg=None if step > 0 else '【train')
             loss = outputs["loss"]
             print('rm_model output', outputs)
             rm_model.backward(loss)

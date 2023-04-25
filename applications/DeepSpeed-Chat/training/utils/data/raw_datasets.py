@@ -110,7 +110,7 @@ class DahoasFullhhrlhfDataset(PromptRawDataset):
 class PhdQualifiedSeedsDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):
-        # pid   <QUESTION>...<ANSWER>...<ANSWER-ChatGPT>...
+        # pid    <QUESTION>...<ANSWER>...<ANSWER-ChatGPT>...
         super().__init__(output_path, seed, local_rank)
         self.dataset_name = "phd_qualified_seeds"
         self.dataset_name_clean = "phd_qualified_seeds"

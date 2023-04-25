@@ -41,7 +41,8 @@ class RewardModel(nn.Module):
                 position_ids=None,
                 head_mask=None,
                 inputs_embeds=None,
-                use_cache=False):
+                use_cache=False,
+                print_msg=None):
         loss = None
 
         transformer_outputs = self.rwtranrsformer(
@@ -51,11 +52,13 @@ class RewardModel(nn.Module):
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
             use_cache=use_cache)
-        print('【reward_model inner output')
         hidden_states = transformer_outputs[0]
-        print('(last_)hidden_states', hidden_states.shape, hidden_states)
         rewards = self.v_head(hidden_states).squeeze(-1)
-        print('rewards', rewards.shape, rewards)
+        if print_msg:
+            print(print_msg, 'reward_model inner output')
+            print('(last_)hidden_states', hidden_states.shape, hidden_states)
+            print('rewards', rewards.shape, rewards)
+
         chosen_mean_scores = []
         rejected_mean_scores = []
 
