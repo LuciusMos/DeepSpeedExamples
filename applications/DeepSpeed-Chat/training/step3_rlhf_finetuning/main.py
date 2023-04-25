@@ -16,9 +16,6 @@ for prompt_batch in prompt_train_dataloader:
     actor_loss, critic_loss = trainer.train_rlhf(out)
 
 """
-from utils.module.lora import convert_lora_to_linear_layer
-from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model
-from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data
 import sys
 from rlhf_engine import DeepSpeedRLHFEngine
 from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
@@ -37,8 +34,10 @@ import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from utils.module.lora import convert_lora_to_linear_layer  # noqa
+from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model  # noqa
+from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data  # noqa
 
 
 def parse_args():
