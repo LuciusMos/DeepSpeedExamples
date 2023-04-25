@@ -316,7 +316,6 @@ def main():
             outputs = rm_model(**batch, use_cache=False,
                                print_msg=None if step > 0 else '【train')
             loss = outputs["loss"]
-            print('rm_model output', outputs)
             rm_model.backward(loss)
             rm_model.step()
             mean_loss += loss.item()
