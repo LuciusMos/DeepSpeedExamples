@@ -153,7 +153,7 @@ class RewardModel(nn.Module):
         }
         # if print_msg:
         #     print('reward_model output', rm_ret)
-        print('reward_model output', {k: rm_ret[k].detach() for k in rm_ret})
+        print('reward_model output', {k: rm_ret[k].detach().cpu().numpy() for k in rm_ret})
         return rm_ret
 
     def forward_value(self,
