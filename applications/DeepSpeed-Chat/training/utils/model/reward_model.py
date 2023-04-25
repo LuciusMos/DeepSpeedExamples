@@ -54,6 +54,7 @@ class RewardModel(nn.Module):
             use_cache=use_cache)
         hidden_states = transformer_outputs[0]
         rewards = self.v_head(hidden_states).squeeze(-1)
+        rewards /= 10.  # Bloomz model spcified, because rewards output is like 50+
         if print_msg:
             print(print_msg, 'reward_model inner output')
             print('(last_)hidden_states', hidden_states.shape, hidden_states)
@@ -72,6 +73,8 @@ class RewardModel(nn.Module):
         chosen_rewards = rewards[:bs]
         rejected_rewards = rewards[bs:]
 
+        padding_pos = "left"  # "right"
+
         # Compute pairwise loss. Only backprop on the different tokens(chosen_id != rejected_id) before padding
         loss = 0
         for i in range(bs):
@@ -80,19 +83,19 @@ class RewardModel(nn.Module):
             chosen_reward = chosen_rewards[i]
             rejected_reward = rejected_rewards[i]
 
-            # get padding position index
+            # get padding token indices
             c_inds = (chosen_id == self.PAD_ID).nonzero()
             # OPT model pads the first token, so we need to use the seoncd padding token as the end of the sequence
             c_ind = c_inds[self.num_padding_at_beginning].item() if \
                 len(c_inds) > self.num_padding_at_beginning else seq_len
-            # get different tokens' index between chosen and reject
+            # get different tokens' indices between chosen_id and reject_id
             check_divergence = (chosen_id != rejected_id).nonzero()
 
             if len(check_divergence) == 0:
                 # chosen_id and reject_id are exactly the same
                 end_ind = rejected_reward.size(-1)
                 divergence_ind = end_ind - 1
-                r_inds = []
+                r_inds = c_inds
                 r_ind = c_ind
             else:
                 # chosen_id and reject_id have differences

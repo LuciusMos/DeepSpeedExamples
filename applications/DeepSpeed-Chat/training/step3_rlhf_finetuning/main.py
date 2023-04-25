@@ -16,32 +16,29 @@ for prompt_batch in prompt_train_dataloader:
     actor_loss, critic_loss = trainer.train_rlhf(out)
 
 """
-import argparse
-import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-import random
-import torch
-from torch.utils.data import DataLoader, RandomSampler
-from torch.utils.data.distributed import DistributedSampler
-
+from utils.module.lora import convert_lora_to_linear_layer
+from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model
+from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data
+import sys
+from rlhf_engine import DeepSpeedRLHFEngine
+from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
+import deepspeed
 from transformers import (
     AutoTokenizer,
     SchedulerType,
     default_data_collator,
 )
+from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data import DataLoader, RandomSampler
+import torch
+import random
+import argparse
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-import deepspeed
-
-from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
-from rlhf_engine import DeepSpeedRLHFEngine
-
-import sys
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data
-from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model
-from utils.module.lora import convert_lora_to_linear_layer
 
 
 def parse_args():
@@ -52,23 +49,20 @@ def parse_args():
         '--data_path',
         nargs='*',
         default=['Dahoas/rm-static'],
-        help=
-        'Path to the training dataset. Accepted format: 1) a single data path, 2) multiple datasets in the form: dataset1-path dataset2-path ...'
+        help='Path to the training dataset. Accepted format: 1) a single data path, 2) multiple datasets in the form: dataset1-path dataset2-path ...'
     )
     parser.add_argument(
         '--data_split',
         type=str,
         default='6,2,2',
-        help=
-        'Comma-separated list of proportions for training phase 1, 2, and 3 data. For example the split `2,4,4` '
+        help='Comma-separated list of proportions for training phase 1, 2, and 3 data. For example the split `2,4,4` '
         'will use 60% of data for phase 1, 20% for phase 2 and 20% for phase 3.'
     )
     parser.add_argument(
         '--data_output_path',
         type=str,
         default='/tmp/data_files',
-        help=
-        'Where to store the data-related files such as shuffle index. This needs to be on a local storage of a node (not on a shared storage)'
+        help='Where to store the data-related files such as shuffle index. This needs to be on a local storage of a node (not on a shared storage)'
     )
     parser.add_argument(
         "--unsupervised_dataset_name",
@@ -79,8 +73,7 @@ def parse_args():
         "--unsupervised_dataset_config_name",
         type=str,
         default=None,
-        help=
-        "The configuration name of the dataset to use (via the datasets library)."
+        help="The configuration name of the dataset to use (via the datasets library)."
     )
     parser.add_argument("--unsup_coef",
                         type=float,
@@ -89,35 +82,30 @@ def parse_args():
     parser.add_argument(
         "--actor_model_name_or_path",
         type=str,
-        help=
-        "Path to pretrained model or model identifier from huggingface.co/models.",
+        help="Path to pretrained model or model identifier from huggingface.co/models.",
         required=True)
     parser.add_argument(
         "--critic_model_name_or_path",
         type=str,
-        help=
-        "Path to pretrained model or model identifier from huggingface.co/models.",
+        help="Path to pretrained model or model identifier from huggingface.co/models.",
         required=True)
     parser.add_argument(
         "--num_padding_at_beginning",
         type=int,
         default=1,
-        help=
-        "OPT model has a fixed number (1) of padding tokens at the beginning of the input. We did not see this in other models but keep it as an option for now."
+        help="OPT model has a fixed number (1) of padding tokens at the beginning of the input. We did not see this in other models but keep it as an option for now."
     )
     parser.add_argument(
         "--per_device_train_batch_size",
         type=int,
         default=16,
-        help=
-        "Batch size (per device) for the training dataloader and generation purpose."
+        help="Batch size (per device) for the training dataloader and generation purpose."
     )
     parser.add_argument(
         "--per_device_mini_train_batch_size",
         type=int,
         default=16,
-        help=
-        "Mini Batch size (per device) for the training dataloader and training purpose."
+        help="Mini Batch size (per device) for the training dataloader and training purpose."
     )
     parser.add_argument("--generation_batch_numbers",
                         type=int,
@@ -203,34 +191,29 @@ def parse_args():
     parser.add_argument(
         "--enable_hybrid_engine",
         action='store_true',
-        help=
-        "Enable hybrid engine for actor model to optimize both inference and training through DeepSpeed."
+        help="Enable hybrid engine for actor model to optimize both inference and training through DeepSpeed."
     )
     parser.add_argument(
         "--unpin_actor_parameters",
         action='store_true',
-        help=
-        "Unpin actor's parameters during generation. This makes generation slower but requires less memory."
+        help="Unpin actor's parameters during generation. This makes generation slower but requires less memory."
     )
     parser.add_argument(
         "--release_inference_cache",
         action='store_true',
-        help=
-        "Release the memory cache used for inference. This makes generation preparation slower but might increase e2e throughput by using larger batch size."
+        help="Release the memory cache used for inference. This makes generation preparation slower but might increase e2e throughput by using larger batch size."
     )
     parser.add_argument(
         "--inference_tp_size",
         type=int,
         default=1,
-        help=
-        "Tensor-parallelism degree used for the inference-optimization. Please note hybrid-engine need to be enabled when using this feature."
+        help="Tensor-parallelism degree used for the inference-optimization. Please note hybrid-engine need to be enabled when using this feature."
     )
     parser.add_argument(
         "--tp_gather_partition_size",
         type=int,
         default=8,
-        help=
-        "Granularity to bring in layers for TP sharding inside the hybrid engine. Please note hybrid-engine and tp_inference_size > 1 need to be true when using this feature."
+        help="Granularity to bring in layers for TP sharding inside the hybrid engine. Please note hybrid-engine and tp_inference_size > 1 need to be true when using this feature."
     )
     parser.add_argument('--offload',
                         action='store_true',
@@ -263,7 +246,7 @@ def parse_args():
     parser.add_argument('--disable_critic_dropout',
                         action='store_true',
                         help='Disable the dropout of the critical model.')
-    ## LoRA for efficient training setting
+    # LoRA for efficient training setting
     parser.add_argument("--actor_lora_dim",
                         type=int,
                         default=0,
@@ -283,7 +266,7 @@ def parse_args():
     parser.add_argument('--only_optimize_lora',
                         action='store_true',
                         help='Only optimize the LoRA parameters.')
-    ## Make EMA as an optional feature
+    # Make EMA as an optional feature
     parser.add_argument('--enable_ema',
                         action='store_true',
                         help='Enable EMA checkpoint for the model.')
@@ -381,8 +364,7 @@ def main():
     torch.distributed.barrier()
 
     # create common tokenizer based on actor model
-    tokenizer = AutoTokenizer.from_pretrained(args.actor_model_name_or_path,
-                                              fast_tokenizer=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.actor_model_name_or_path, fast_tokenizer=True, padding_side="right")
     tokenizer.pad_token = tokenizer.eos_token
 
     # create dataloaders (prompt + unsupervised)

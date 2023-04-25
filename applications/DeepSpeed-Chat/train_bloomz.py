@@ -42,12 +42,12 @@ step_dirs = {
 model_type = {1: "actor", 2: "reward", 3: "step3"}
 dse_url = "https://github.com/microsoft/DeepSpeedExamples/tree/master/applications/DeepSpeed-Chat/"
 
-# python train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir bloomz-560m --step 2 3
+# python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir bloomz-560m --step 2 3
 
 # == reward_model debug
-# python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2
+# python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2
 # b training/step2_reward_model_finetuning/main.py:302
-# python train_bloomz.py --actor-model bigscience/bloomz-7b1-mt --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2 3
+# python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2 3
 
 
 def parse_args():
@@ -66,9 +66,8 @@ def parse_args():
         # default="1.3b",
         # choices=("1.3b", "6.7b", "13b", "66b"),
         type=lambda x: x.replace("bigscience/", ""),
-        default="bloomz-7b1-mt",
-        choices=("bloomz-560m", "bloomz-7b1",
-                 "bloomz-7b1-mt", "bloomz", "bloomz-mt"),
+        default="bloomz-7b1",
+        choices=("bloomz-560m", "bloomz-7b1", "bloomz"),
         help="Which bigscience/bloomz model to use for Actor (step 1)",
     )
     parser.add_argument(
@@ -77,9 +76,8 @@ def parse_args():
         # default="350m",
         # choices=("350m"),
         type=lambda x: x.replace("bigscience/", ""),
-        default="bloomz-7b1-mt",
-        choices=("bloomz-560m", "bloomz-7b1",
-                 "bloomz-7b1-mt", "bloomz", "bloomz-mt"),
+        default="bloomz-560m",
+        choices=("bloomz-560m", "bloomz-7b1", "bloomz"),
         help="Which bigscience/bloomz* model to use for Reward (step 2)",
     )
     parser.add_argument(
@@ -123,7 +121,6 @@ def get_model_size(args, step_num):
     if step_num == 3:
         return get_model_size(args, 1)
     return getattr(args, f"{model_type[step_num]}_model")
-    # return "7b1-mt"
 
 
 def get_zero_stage(args, step_num):
