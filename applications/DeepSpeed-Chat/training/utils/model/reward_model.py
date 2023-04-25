@@ -52,9 +52,8 @@ class RewardModel(nn.Module):
             inputs_embeds=inputs_embeds,
             use_cache=use_cache)
         print('【reward_model inner output')
-        print('transformer_outputs', transformer_outputs.shape)
         hidden_states = transformer_outputs[0]
-        print('hidden_states is transformer_outputs[0]', hidden_states)
+        print('(last_)hidden_states', hidden_states.shape, hidden_states)
         rewards = self.v_head(hidden_states).squeeze(-1)
         print('rewards', rewards.shape, rewards)
         chosen_mean_scores = []
