@@ -102,7 +102,7 @@ class RewardModel(nn.Module):
                 r_ind = r_inds[self.num_padding_at_beginning].item() if \
                     len(r_inds) > self.num_padding_at_beginning else seq_len
                 end_ind = max(c_ind, r_ind)
-                divergence_ind = check_divergence[0]
+                divergence_ind = check_divergence[0].item()
             assert divergence_ind >= self.num_padding_at_beginning   # issue#338 reports bloomz should be >= 0
 
             # if print_msg:
@@ -123,9 +123,10 @@ class RewardModel(nn.Module):
                 loss_exp = torch.exp(loss_minus) + 1
                 loss_log = torch.log(loss_exp)
             nan_inf_mask = loss_log.isinf() | loss_log.isnan()
-            loss += -loss_log.mean()
+            if not nan_inf_mask.any():
+                loss += -loss_log.mean()
 
-            print('c/r_reward[{}:{}], c_ind:{}, r_ind:{}'.format(divergence_ind, end_ind, c_ind, r_ind))
+            # print('c/r_reward[{}:{}], c_ind:{}, r_ind:{}'.format(divergence_ind, end_ind, c_ind, r_ind))
 
             # if print_msg:
             if nan_inf_mask.any():
@@ -152,7 +153,7 @@ class RewardModel(nn.Module):
         }
         # if print_msg:
         #     print('reward_model output', rm_ret)
-        print('reward_model output', rm_ret)
+        print('reward_model output', {k: rm_ret[k].detach() for k in rm_ret})
         return rm_ret
 
     def forward_value(self,
