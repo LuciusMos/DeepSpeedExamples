@@ -84,9 +84,9 @@ def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
 
         shuffle_idx = get_shuffle_idx(seed, data_size)
         for split_i in range(len(splits)):
-            shuffle_idx_split_file_name = f"{output_path}/{dataset_name}_seed{seed}_{split_name}_{data_split}_{split_i}.npy"
-            shuffle_idx_split = shuffle_idx[
-                splits_index[split_i]:splits_index[split_i + 1]]
+            shuffle_idx_split_file_name = \
+                f"{output_path}/{dataset_name}_seed{seed}_{split_name}_{data_split}_{split_i}.npy"
+            shuffle_idx_split = shuffle_idx[splits_index[split_i]: splits_index[split_i + 1]]
             np.save(shuffle_idx_split_file_name,
                     shuffle_idx_split,
                     allow_pickle=True)
@@ -152,10 +152,8 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
     elif train_phase == 2:
         for i, tmp_data in enumerate(current_dataset):
             # tokenize the text
-            chosen_sentence = raw_dataset.get_prompt_and_chosen(
-                tmp_data)  # the accept response
-            reject_sentence = raw_dataset.get_prompt_and_rejected(
-                tmp_data)  # the accept response
+            chosen_sentence = raw_dataset.get_prompt_and_chosen(tmp_data)  # the accept response
+            reject_sentence = raw_dataset.get_prompt_and_rejected(tmp_data)  # the accept response
             if chosen_sentence is not None and reject_sentence is not None:
                 chosen_sentence += end_of_conversation_token  # the accept response
                 reject_sentence += end_of_conversation_token
@@ -202,10 +200,8 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
 def create_dataset(local_rank, dataset_name, data_split, output_path,
                    train_phase, seed, tokenizer, end_of_conversation_token,
                    max_seq_len):
-    print('【【data_utils/create_dataset, train_phase={}'.format(train_phase))
     raw_dataset = get_raw_dataset(dataset_name, output_path, seed, local_rank)
     train_dataset = raw_dataset.get_train_data()
-    print('train_dataset', len(train_dataset), train_dataset[:2])
     train_index = get_raw_dataset_split_index(local_rank, output_path,
                                               raw_dataset.dataset_name_clean,
                                               seed, "train", data_split,
@@ -216,16 +212,8 @@ def create_dataset(local_rank, dataset_name, data_split, output_path,
                                          train_phase, tokenizer,
                                          end_of_conversation_token,
                                          max_seq_len)
-    print('train_dataset.prompt', len(train_dataset.prompt_dataset),
-          train_dataset.prompt_dataset[:2])
-    print('train_dataset.chose', len(train_dataset.chosen_dataset),
-          train_dataset.chosen_dataset[:2])
-    print('train_dataset.reject', len(train_dataset.reject_dataset),
-          train_dataset.reject_dataset[:2])
-    print('train_index', len(train_index), train_index[:2])
 
     eval_dataset = raw_dataset.get_eval_data()
-    print('eval_dataset', len(eval_dataset), eval_dataset[:2])
     eval_index = get_raw_dataset_split_index(local_rank, output_path,
                                              raw_dataset.dataset_name_clean,
                                              seed, "eval",
@@ -235,13 +223,6 @@ def create_dataset(local_rank, dataset_name, data_split, output_path,
     eval_dataset = create_dataset_split(eval_dataset, raw_dataset, train_phase,
                                         tokenizer, end_of_conversation_token,
                                         max_seq_len)
-    print('eval_dataset.prompt', len(eval_dataset.prompt_dataset),
-          eval_dataset.prompt_dataset[:2])
-    print('eval_dataset.chose', len(eval_dataset.chosen_dataset),
-          eval_dataset.chosen_dataset[:2])
-    print('eval_dataset.reject', len(eval_dataset.reject_dataset),
-          eval_dataset.reject_dataset[:2])
-    print('eval_index', len(eval_index), eval_index[:2])
     return train_dataset, eval_dataset
 
 
@@ -273,7 +254,9 @@ def create_prompt_dataset(local_rank,
     buf_create_cache = torch.ByteTensor([not cache_found]).cuda()
     torch.distributed.all_reduce(buf_create_cache)
 
-    if local_rank <= 0 and buf_create_cache.item() != 0:
+    # rank > 0 or dataset already cached do not need to prepare dataset this time
+    should_prepare_dataset = local_rank <= 0 and buf_create_cache.item() != 0
+    if should_prepare_dataset:
         if len(data_path) == 1:  # Single dataset.
             train_dataset, eval_dataset = create_dataset(
                 local_rank, data_path[0], data_split, output_path, train_phase,
@@ -334,7 +317,16 @@ def create_prompt_dataset(local_rank,
         torch.save(train_dataset, train_fname)
         torch.save(eval_dataset, eval_fname)
     torch.distributed.barrier()
-    return torch.load(train_fname), torch.load(eval_fname)
+    train_dataset, eval_dataset = torch.load(train_fname), torch.load(eval_fname)
+    print('【【data_utils/create_prompt_dataset, train_phase={}, prepare_this_time={}'.format(
+        train_phase, should_prepare_dataset))
+    print('train_dataset.prompt', len(train_dataset.prompt_dataset), train_dataset.prompt_dataset[:2])
+    print('train_dataset.chose', len(train_dataset.chosen_dataset), train_dataset.chosen_dataset[:2])
+    print('train_dataset.reject', len(train_dataset.reject_dataset), train_dataset.reject_dataset[:2])
+    print('eval_dataset.prompt', len(eval_dataset.prompt_dataset), eval_dataset.prompt_dataset[:2])
+    print('eval_dataset.chose', len(eval_dataset.chosen_dataset), eval_dataset.chosen_dataset[:2])
+    print('eval_dataset.reject', len(eval_dataset.reject_dataset), eval_dataset.reject_dataset[:2])
+    return train_dataset, eval_dataset
 
 
 class DataCollatorReward:

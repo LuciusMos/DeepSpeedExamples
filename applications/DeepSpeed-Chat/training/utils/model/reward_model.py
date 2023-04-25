@@ -85,21 +85,29 @@ class RewardModel(nn.Module):
             # OPT model pads the first token, so we need to use the seoncd padding token as the end of the sequence
             c_ind = c_inds[self.num_padding_at_beginning].item() if \
                 len(c_inds) > self.num_padding_at_beginning else seq_len
-            # get same tokens' index between chosen and reject
+            # get different tokens' index between chosen and reject
             check_divergence = (chosen_id != rejected_id).nonzero()
 
             if len(check_divergence) == 0:
+                # chosen_id and reject_id are exactly the same
                 end_ind = rejected_reward.size(-1)
                 divergence_ind = end_ind - 1
+                r_inds = []
                 r_ind = c_ind
             else:
+                # chosen_id and reject_id have differences
                 # Check if there is any padding otherwise take length of sequence
                 r_inds = (rejected_id == self.PAD_ID).nonzero()
                 r_ind = r_inds[self.num_padding_at_beginning].item() if \
                     len(r_inds) > self.num_padding_at_beginning else seq_len
                 end_ind = max(c_ind, r_ind)
                 divergence_ind = check_divergence[0]
-            assert divergence_ind > 0   # issue#338 reports bloomz should be >=
+            assert divergence_ind >= self.num_padding_at_beginning   # issue#338 reports bloomz should be >= 0
+
+            if print_msg:
+                print('chosen c_inds:{}, c_ind:{}'.format(c_inds, c_ind))
+                print('reject r_inds:{}, r_ind:{}'.format(r_inds, r_ind))
+
             c_truncated_reward = chosen_reward[divergence_ind:end_ind]
             r_truncated_reward = rejected_reward[divergence_ind:end_ind]
             chosen_mean_scores.append(chosen_reward[c_ind - 1])  # use the end score for reference
@@ -108,12 +116,13 @@ class RewardModel(nn.Module):
             loss_minus = c_truncated_reward - r_truncated_reward
             loss_sig = torch.sigmoid(loss_minus)
             loss_log = torch.log(loss_sig)
+            nan_inf_mask = loss_log.isinf() | loss_log.isnan()
             loss += loss_log.mean()
             if print_msg:
-                print('divergence check_list:{}, ind:{}'.format(check_divergence, divergence_ind))  # noqa
-                print('chosen ind:{}, truncated_reward:{}, end_score:{}'.format(c_ind, c_truncated_reward, chosen_reward[c_ind - 1]))  # noqa
-                print('reject ind:{}, truncated_reward:{}, end_score:{}'.format(r_ind, r_truncated_reward, rejected_reward[r_ind - 1]))  # noqa
-                print('loss minus:{}, sig:{}, log:{}'.format(loss_minus, loss_sig, loss_log))
+                print('diverg_check_list:{}, end_ind:{}'.format(check_divergence.squeeze(), end_ind))  # noqa
+                print('chosen c_ind:{}, c_truncated_reward:{}, r_end_score:{}'.format(c_ind, c_truncated_reward, chosen_reward[c_ind - 1]))  # noqa
+                print('reject c_ind:{}, r_truncated_reward:{}, r_end_score:{}'.format(r_ind, r_truncated_reward, rejected_reward[r_ind - 1]))  # noqa
+                print('loss mask:{}, minus:{}, sig:{}, log:{}'.format(nan_inf_mask, loss_minus[nan_inf_mask], loss_sig[nan_inf_mask], loss_log[nan_inf_mask]))  # noqa
 
         loss = loss / bs
         chosen_mean_scores = torch.stack(chosen_mean_scores)
