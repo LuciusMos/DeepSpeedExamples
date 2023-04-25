@@ -195,7 +195,7 @@ def main():
     set_random_seed(args.seed)
     torch.distributed.barrier()
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, fast_tokenizer=True, , padding_side="right")
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, fast_tokenizer=True, padding_side="right")
     tokenizer.pad_token = tokenizer.eos_token
 
     rm_model = create_critic_model(args.model_name_or_path,
