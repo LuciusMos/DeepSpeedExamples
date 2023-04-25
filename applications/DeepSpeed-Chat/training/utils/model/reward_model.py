@@ -55,10 +55,10 @@ class RewardModel(nn.Module):
         hidden_states = transformer_outputs[0]
         rewards = self.v_head(hidden_states).squeeze(-1)
         rewards /= 10.  # Bloomz model spcified, because rewards output is like 50+
-        if print_msg:
-            print(print_msg, 'reward_model inner output')
-            print('(last_)hidden_states', hidden_states.shape, hidden_states)
-            print('rewards', rewards.shape, rewards)
+        # if print_msg:
+        #     print(print_msg, 'reward_model inner output')
+        #     print('(last_)hidden_states', hidden_states.shape, hidden_states)
+        #     print('rewards', rewards.shape, rewards)
 
         chosen_mean_scores = []
         rejected_mean_scores = []
@@ -72,8 +72,6 @@ class RewardModel(nn.Module):
         rejected_ids = input_ids[bs:]
         chosen_rewards = rewards[:bs]
         rejected_rewards = rewards[bs:]
-
-        padding_pos = "left"  # "right"
 
         # Compute pairwise loss. Only backprop on the different tokens(chosen_id != rejected_id) before padding
         loss = 0
@@ -107,16 +105,16 @@ class RewardModel(nn.Module):
                 divergence_ind = check_divergence[0]
             assert divergence_ind >= self.num_padding_at_beginning   # issue#338 reports bloomz should be >= 0
 
-            if print_msg:
-                print('chosen c_inds:{}, c_ind:{}'.format(c_inds.squeeze(), c_ind))
-                print('reject r_inds:{}, r_ind:{}'.format(r_inds.squeeze(), r_ind))
+            # if print_msg:
+            #     print('chosen c_ind:{}'.format(c_ind))
+            #     print('reject r_ind:{}'.format(r_ind))
 
             c_truncated_reward = chosen_reward[divergence_ind:end_ind]
             r_truncated_reward = rejected_reward[divergence_ind:end_ind]
             chosen_mean_scores.append(chosen_reward[c_ind - 1])  # use the end score for reference
             rejected_mean_scores.append(rejected_reward[r_ind - 1])
 
-            loss_type = "log-exp"  # or "log-sig"
+            loss_type = "log-sig"  # or "log-sig"
             loss_minus = c_truncated_reward - r_truncated_reward
             if loss_type == "log-sig":
                 loss_sig = torch.sigmoid(loss_minus)
@@ -126,15 +124,23 @@ class RewardModel(nn.Module):
                 loss_log = torch.log(loss_exp)
             nan_inf_mask = loss_log.isinf() | loss_log.isnan()
             loss += -loss_log.mean()
-            if print_msg:
-                print('check_divergence:{}, end_ind:{}'.format(check_divergence.squeeze(), end_ind))  # noqa
-                print('chosen c_ind:{}, c_truncated_reward:{}, r_end_score:{}'.format(c_ind, c_truncated_reward, chosen_reward[c_ind - 1]))  # noqa
-                print('reject r_ind:{}, r_truncated_reward:{}, r_end_score:{}'.format(r_ind, r_truncated_reward, rejected_reward[r_ind - 1]))  # noqa
-                print('loss mask:{}, chosen:{}, reject:{}'.format(nan_inf_mask, c_truncated_reward[nan_inf_mask], r_truncated_reward[nan_inf_mask]))  # noqa
+
+            print('c/r_reward[{}:{}], c_ind:{}, r_ind:{}'.format(divergence_ind, end_ind, c_ind, r_ind))
+
+            # if print_msg:
+            if nan_inf_mask.any():
+                # print('check_divergence:{}, end_ind:{}'.format(check_divergence.squeeze(), end_ind))  # noqa
+                # print('chosen c_ind:{}, c_truncated_reward:{}, r_end_score:{}'.format(c_ind, c_truncated_reward, chosen_reward[c_ind - 1]))  # noqa
+                # print('reject r_ind:{}, r_truncated_reward:{}, r_end_score:{}'.format(r_ind, r_truncated_reward, rejected_reward[r_ind - 1]))  # noqa
+                print('loss mask:{}'.format(nan_inf_mask))
+                print('chosen:{}'.format(c_truncated_reward[nan_inf_mask]))
+                print('reject:{}', format(r_truncated_reward[nan_inf_mask]))
+                print('minus: {}'.format(loss_minus[nan_inf_mask]))
                 if loss_type == 'log-sig':
-                    print('minus:{}, sig:{}, log:{}'.format(loss_minus[nan_inf_mask], loss_sig[nan_inf_mask], loss_log[nan_inf_mask]))  # noqa
+                    print('[[sig: {}'.format(loss_sig[nan_inf_mask]))
                 elif loss_type == "log-exp":
-                    print('minus:{}, exp:{}, log:{}'.format(loss_minus[nan_inf_mask], loss_exp[nan_inf_mask], loss_log[nan_inf_mask]))  # noqa
+                    print('[[exp: {}'.format(loss_exp[nan_inf_mask]))
+                print('log:   {}'.format(loss_log[nan_inf_mask]))
 
         loss = loss / bs
         chosen_mean_scores = torch.stack(chosen_mean_scores)
@@ -144,8 +150,9 @@ class RewardModel(nn.Module):
             "chosen_mean_scores": chosen_mean_scores,
             "rejected_mean_scores": rejected_mean_scores,
         }
-        if print_msg:
-            print('reward_model output', rm_ret)
+        # if print_msg:
+        #     print('reward_model output', rm_ret)
+        print('reward_model output', rm_ret)
         return rm_ret
 
     def forward_value(self,
