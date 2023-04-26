@@ -57,10 +57,10 @@ def parse_args():
     )
     parser.add_argument(
         "--actor-model",
-        # type=lambda x: x.replace("bigscience/", ""),
-        # default="bloomz-7b1",
-        # choices=("bloomz-560m", "bloomz-7b1", "bloomz"),
-        # help="Which bigscience/bloomz model to use for Actor (step 1)",
+        type=lambda x: x.replace("bigscience/", ""),
+        default="bloomz-7b1",
+        choices=("bloomz-560m", "bloomz-7b1", "bloomz"),
+        help="Which bigscience/bloomz model to use for Actor (step 1)",
     )
     parser.add_argument(
         "--reward-model",
