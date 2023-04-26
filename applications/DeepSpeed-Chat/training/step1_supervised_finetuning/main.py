@@ -65,6 +65,11 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
+        "--model_cache",
+        type=str,
+        help="Path to cached pretrained model",
+    )
+    parser.add_argument(
         "--per_device_train_batch_size",
         type=int,
         default=16,
@@ -202,7 +207,8 @@ def main():
                             args.model_name_or_path,
                             tokenizer,
                             ds_config,
-                            disable_dropout=args.disable_dropout)
+                            disable_dropout=args.disable_dropout,
+                            args.model_cache)
 
     if args.lora_dim > 0:
         model = convert_linear_layer_to_lora(model, args.lora_module_name,

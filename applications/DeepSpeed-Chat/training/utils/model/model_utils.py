@@ -20,7 +20,8 @@ def create_hf_model(model_class,
                     tokenizer,
                     ds_config=None,
                     rlhf_training=False,
-                    disable_dropout=False):
+                    disable_dropout=False,
+                    model_cache=None):
     model_config = AutoConfig.from_pretrained(model_name_or_path)
     if disable_dropout:
         model_config.dropout = 0.0
@@ -37,7 +38,8 @@ def create_hf_model(model_class,
         model = model_class.from_pretrained(
             model_name_or_path,
             from_tf=bool(".ckpt" in model_name_or_path),
-            config=model_config)
+            config=model_config,
+            cache_dir=model_cache)
 
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
