@@ -12,6 +12,7 @@ python prompt_eval.py \
     --model_name_or_path_finetune /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/keyword-bloomz-7b1-sft/actor-models/bloomz-7b1 \
     --language keyword \
     --max_new_tokens 200 \
+    --test
     # --language phd \
     # --max_new_tokens 600 \
 

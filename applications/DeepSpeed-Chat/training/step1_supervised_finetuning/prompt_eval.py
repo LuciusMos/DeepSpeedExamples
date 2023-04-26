@@ -76,10 +76,17 @@ def parse_args():
         default=100,
         help='Specify num of return sequences',
     )
-    parser.add_argument("--language",
-                        type=str,
-                        default="English",
-                        choices=["English", "Chinese", "Japanese", "phd"])
+    parser.add_argument(
+        "--language",
+        type=str,
+        default="English",
+        choices=["English", "Chinese", "Japanese", "phd", "keyword"]
+    )
+    parser.add_argument(
+        "--test",
+        action='store_true',
+        help='test mode will only use 10 prompts',
+    )
 
     args = parser.parse_args()
     return args
@@ -254,7 +261,7 @@ def main():
         with open('/share/zhaoliangxuan/dataset/keyword.json', 'r') as f:
             for i, line in enumerate(f.readlines()):
                 prompts.raw_datasets.append(json.loads(line))
-                if i == 9:
+                if i == 9 and args.test:
                     break
         prompts = [p['prompt'] for p in prompts]
 
