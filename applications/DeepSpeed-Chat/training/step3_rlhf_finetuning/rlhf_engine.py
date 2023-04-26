@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # DeepSpeed Team
+import os
+import sys
 import time
 import torch
 import deepspeed
@@ -9,10 +11,11 @@ from deepspeed.ops.adam import FusedAdam
 from deepspeed.ops.adam import DeepSpeedCPUAdam
 from transformers import AutoModelForCausalLM, get_scheduler
 
-from utils.ds_utils import get_train_ds_config, get_eval_ds_config
-from utils.module.lora import convert_linear_layer_to_lora, only_optimize_lora_parameters
-from utils.model.model_utils import create_hf_model, create_critic_model
-from utils.utils import get_optimizer_grouped_parameters
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from utils.utils import get_optimizer_grouped_parameters  # noqa
+from utils.model.model_utils import create_hf_model, create_critic_model  # noqa
+from utils.module.lora import convert_linear_layer_to_lora, only_optimize_lora_parameters  # noqa
+from utils.ds_utils import get_train_ds_config, get_eval_ds_config  # noqa
 """
 TODOs:
   * support HF models for critic (for debugging), must be a previously saved ckpt from step-2
@@ -80,10 +83,10 @@ class DeepSpeedRLHFEngine():
             self.args.max_answer_seq_len)
         ds_config[
             'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
-        #TODO(jeff): we should probably set grad accumlation steps here as well for clarity
+        # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
         ds_config[
             'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-            ) * self.args.gradient_accumulation_steps_actor
+        ) * self.args.gradient_accumulation_steps_actor
 
         # Model
         actor_model = create_hf_model(
@@ -118,7 +121,7 @@ class DeepSpeedRLHFEngine():
         )
 
         # DeepSpeed Engine
-        #TODO: move enable_hybrid_engine and pin_parameters to ds_config
+        # TODO: move enable_hybrid_engine and pin_parameters to ds_config
         actor_engine, *_ = deepspeed.initialize(model=actor_model,
                                                 optimizer=optim,
                                                 lr_scheduler=lr_scheduler,
@@ -139,10 +142,10 @@ class DeepSpeedRLHFEngine():
                                        zero_stage)
         ds_config[
             'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
-        #TODO(jeff): we should probably set grad accumlation steps here as well for clarity
+        # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
         ds_config[
             'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-            ) * self.args.gradient_accumulation_steps_actor
+        ) * self.args.gradient_accumulation_steps_actor
 
         ref_model = create_hf_model(AutoModelForCausalLM,
                                     actor_model_name_or_path, self.tokenizer,
@@ -165,10 +168,10 @@ class DeepSpeedRLHFEngine():
                                        zero_stage)
         ds_config[
             'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
-        #TODO(jeff): we should probably set grad accumlation steps here as well for clarity
+        # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
         ds_config[
             'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-            ) * self.args.gradient_accumulation_steps_actor
+        ) * self.args.gradient_accumulation_steps_actor
 
         actor_model_ema = create_hf_model(AutoModelForCausalLM,
                                           actor_model_name_or_path,
@@ -190,13 +193,13 @@ class DeepSpeedRLHFEngine():
                                         stage=self.args.critic_zero_stage)
         ds_config[
             'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
-        #TODO(jeff): we should probably set grad accumlation steps here as well for clarity
+        # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
         ds_config[
             'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-            ) * self.args.gradient_accumulation_steps
+        ) * self.args.gradient_accumulation_steps
 
-        #TODO(jeff): should not be needed, we should be able to use ds_config above
-        #TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
+        # TODO(jeff): should not be needed, we should be able to use ds_config above
+        # TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
         ds_eval_config = get_eval_ds_config(offload=False, stage=0)
 
         # Model
@@ -255,10 +258,10 @@ class DeepSpeedRLHFEngine():
             'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
         ds_config[
             'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-            ) * self.args.gradient_accumulation_steps
+        ) * self.args.gradient_accumulation_steps
 
-        #TODO(jeff): should not be needed, we should be able to use ds_config above
-        #TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
+        # TODO(jeff): should not be needed, we should be able to use ds_config above
+        # TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
         ds_eval_config = get_eval_ds_config(offload=False, stage=0)
 
         # Model
