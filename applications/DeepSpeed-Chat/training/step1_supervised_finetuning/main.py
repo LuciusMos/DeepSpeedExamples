@@ -208,7 +208,7 @@ def main():
                             tokenizer,
                             ds_config,
                             disable_dropout=args.disable_dropout,
-                            args.model_cache)
+                            model_cache=args.model_cache)
 
     if args.lora_dim > 0:
         model = convert_linear_layer_to_lora(model, args.lora_module_name,
