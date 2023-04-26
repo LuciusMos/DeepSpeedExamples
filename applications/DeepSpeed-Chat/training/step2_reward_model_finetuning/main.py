@@ -242,18 +242,16 @@ def main():
         for step, batch in enumerate(eval_dataloader):
             batch = to_device(batch, device)
             with torch.no_grad():
-                outputs = model(**batch, print_msg=None if step >
-                                0 else '【evaluation_reward')
-
+                outputs = model(**batch, print_msg=None if step > 0 else '【evaluation_reward')
             chosen = outputs["chosen_mean_scores"]
             rejected = outputs["rejected_mean_scores"]
             correct_predictions += (chosen > rejected).sum()
             total_predictions += chosen.shape[0]
             scores += outputs["chosen_mean_scores"].mean().float()
-            if step == 99:  # For faster evaluation and debugging
-                break
-            acc = correct_predictions / total_predictions
-            scores = scores / (step + 1)
+            # if step == 99:  # For faster evaluation and debugging
+            #     break
+        acc = correct_predictions / total_predictions
+        scores = scores / (step + 1)
         try:
             acc = get_all_reduce_mean(acc).item()
             scores = get_all_reduce_mean(scores).item()

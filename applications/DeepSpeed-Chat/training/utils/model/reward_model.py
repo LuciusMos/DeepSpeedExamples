@@ -54,7 +54,7 @@ class RewardModel(nn.Module):
             use_cache=use_cache)
         hidden_states = transformer_outputs[0]
         rewards = self.v_head(hidden_states).squeeze(-1)
-        rewards /= 10.  # Bloomz model spcified, because rewards output is like 50+
+        # rewards /= 10.  # Bloomz model spcified, because rewards output is like 50+
         # if print_msg:
         #     print(print_msg, 'reward_model inner output')
         #     print('(last_)hidden_states', hidden_states.shape, hidden_states)
@@ -114,34 +114,37 @@ class RewardModel(nn.Module):
             chosen_mean_scores.append(chosen_reward[c_ind - 1])  # use the end score for reference
             rejected_mean_scores.append(rejected_reward[r_ind - 1])
 
-            loss_type = "log-sig"  # or "log-sig"
-            loss_minus = c_truncated_reward - r_truncated_reward
-            if loss_type == "log-sig":
-                loss_sig = torch.sigmoid(loss_minus)
-                loss_log = torch.log(loss_sig)
-            elif loss_type == "log-exp":
-                loss_exp = torch.exp(loss_minus) + 1
-                loss_log = torch.log(loss_exp)
-            nan_inf_mask = loss_log.isinf() | loss_log.isnan()
-            if not nan_inf_mask.any():
-                loss += -loss_log.mean()
+            # loss_type = "log-sig"  # or "log-sig"
+            # loss_minus = c_truncated_reward - r_truncated_reward
+            # if loss_type == "log-sig":
+            #     loss_sig = torch.sigmoid(loss_minus)
+            #     loss_log = -torch.log(loss_sig)
+            # elif loss_type == "log-exp":
+            #     loss_exp = torch.exp(loss_minus) + 1
+            #     loss_log = torch.log(loss_exp)
+            # nan_inf_mask = loss_log.isinf() | loss_log.isnan()
+            # if not nan_inf_mask.any():
+            #     loss += loss_log.mean()
 
-            # print('c/r_reward[{}:{}], c_ind:{}, r_ind:{}'.format(divergence_ind, end_ind, c_ind, r_ind))
+            # # print('c/r_reward[{}:{}], c_ind:{}, r_ind:{}'.format(divergence_ind, end_ind, c_ind, r_ind))
 
-            # if print_msg:
-            if nan_inf_mask.any():
-                # print('check_divergence:{}, end_ind:{}'.format(check_divergence.squeeze(), end_ind))  # noqa
-                # print('chosen c_ind:{}, c_truncated_reward:{}, r_end_score:{}'.format(c_ind, c_truncated_reward, chosen_reward[c_ind - 1]))  # noqa
-                # print('reject r_ind:{}, r_truncated_reward:{}, r_end_score:{}'.format(r_ind, r_truncated_reward, rejected_reward[r_ind - 1]))  # noqa
-                print('loss mask:{}'.format(nan_inf_mask))
-                print('chosen:{}'.format(c_truncated_reward[nan_inf_mask]))
-                print('reject:{}', format(r_truncated_reward[nan_inf_mask]))
-                print('minus: {}'.format(loss_minus[nan_inf_mask]))
-                if loss_type == 'log-sig':
-                    print('[[sig: {}'.format(loss_sig[nan_inf_mask]))
-                elif loss_type == "log-exp":
-                    print('[[exp: {}'.format(loss_exp[nan_inf_mask]))
-                print('log:   {}'.format(loss_log[nan_inf_mask]))
+            # # if print_msg:
+            # if nan_inf_mask.any():
+            #     # print('check_divergence:{}, end_ind:{}'.format(check_divergence.squeeze(), end_ind))  # noqa
+            #     # print('chosen c_ind:{}, c_truncated_reward:{}, r_end_score:{}'.format(c_ind, c_truncated_reward, chosen_reward[c_ind - 1]))  # noqa
+            #     # print('reject r_ind:{}, r_truncated_reward:{}, r_end_score:{}'.format(r_ind, r_truncated_reward, rejected_reward[r_ind - 1]))  # noqa
+            #     print('loss mask:{}'.format(nan_inf_mask))
+            #     print('chosen:{}'.format(c_truncated_reward[nan_inf_mask]))
+            #     print('reject:{}', format(r_truncated_reward[nan_inf_mask]))
+            #     print('minus: {}'.format(loss_minus[nan_inf_mask]))
+            #     if loss_type == 'log-sig':
+            #         print('[[sig: {}'.format(loss_sig[nan_inf_mask]))
+            #     elif loss_type == "log-exp":
+            #         print('[[exp: {}'.format(loss_exp[nan_inf_mask]))
+            #     print('log:   {}'.format(loss_log[nan_inf_mask]))
+
+            # use `softplus`` fn for numerical stability
+            loss += nn.functional.softplus(r_truncated_reward - c_truncated_reward).mean()
 
         loss = loss / bs
         chosen_mean_scores = torch.stack(chosen_mean_scores)

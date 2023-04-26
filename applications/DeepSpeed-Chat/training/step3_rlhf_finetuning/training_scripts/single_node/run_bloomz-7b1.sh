@@ -19,17 +19,17 @@ if [ "$CRITIC_ZERO_STAGE" == "" ]; then
 fi
 mkdir -p $OUTPUT
 
-Num_Padding_at_Beginning=1 # this is model related
+Num_Padding_at_Beginning=0 # this is model related, 1 for OPT, 0 for Bloomz
 
 Actor_Lr=5e-4
 Critic_Lr=5e-6
 
 deepspeed --master_port 12346 main.py \
    --data_path phd_qualified_seeds \
-   --data_split 2,4,4 \
+   --data_split 5,2,3 \
    --actor_model_name_or_path $ACTOR_MODEL_PATH \
    --critic_model_name_or_path $CRITIC_MODEL_PATH \
-   --num_padding_at_beginning 0 \
+   --num_padding_at_beginning ${Num_Padding_at_Beginning} \
    --per_device_train_batch_size 2 \
    --per_device_mini_train_batch_size 2 \
    --generation_batch_numbers 1 \

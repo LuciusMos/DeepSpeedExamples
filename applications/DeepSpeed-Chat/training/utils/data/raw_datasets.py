@@ -128,7 +128,7 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
         self.use_ratio = 1.0
         self.raw_datasets = self.raw_datasets[: int(
             self.use_ratio * len(self.raw_datasets))]
-        self.train_ratio = 0.7
+        self.train_ratio = 0.8
 
     def get_train_data(self):
         return self.raw_datasets[: int(self.train_ratio * len(self.raw_datasets))]

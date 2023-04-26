@@ -191,12 +191,10 @@ class DeepSpeedRLHFEngine():
         stime = log_init("Critic")
         ds_config = get_train_ds_config(offload=self.args.offload,
                                         stage=self.args.critic_zero_stage)
-        ds_config[
-            'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
+        ds_config['train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
         # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
-        ds_config[
-            'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-        ) * self.args.gradient_accumulation_steps
+        ds_config['train_batch_size'] = self.args.per_device_mini_train_batch_size * \
+            torch.distributed.get_world_size() * self.args.gradient_accumulation_steps
 
         # TODO(jeff): should not be needed, we should be able to use ds_config above
         # TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
