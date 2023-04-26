@@ -260,7 +260,7 @@ def main():
         prompts = []
         with open('/share/zhaoliangxuan/dataset/keyword.json', 'r') as f:
             for i, line in enumerate(f.readlines()):
-                prompts.raw_datasets.append(json.loads(line))
+                prompts.append(json.loads(line))
                 if i == 9 and args.test:
                     break
         prompts = [p['prompt'] for p in prompts]
