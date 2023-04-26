@@ -8,6 +8,7 @@ import logging
 import torch
 import sys
 import os
+import json
 
 from transformers import (
     AutoConfig,
@@ -27,6 +28,11 @@ def parse_args():
         type=str,
         help="Path to baseline model",
         required=True,
+    )
+    parser.add_argument(
+        "--model_baseline_cache",
+        type=str,
+        help="Path to cached baseline model",
     )
     parser.add_argument(
         "--model_name_or_path_finetune",
@@ -201,11 +207,13 @@ def main():
 
     model_baseline = create_hf_model(AutoModelForCausalLM,
                                      args.model_name_or_path_baseline,
-                                     tokenizer, None)
+                                     tokenizer,
+                                     None,
+                                     model_cache=args.model_baseline_cache)
     model_fintuned = create_hf_model(AutoModelForCausalLM,
                                      args.model_name_or_path_finetune,
-                                     tokenizer, None)
-
+                                     tokenizer,
+                                     None)
     model_baseline.to(device)
     model_fintuned.to(device)
 
@@ -241,9 +249,16 @@ def main():
         ]
     elif args.language == "phd":
         prompts = []  # todo
+    elif args.language == "keyword":
+        prompts = []
+        with open('/share/zhaoliangxuan/dataset/keyword.json', 'r') as f:
+            for i, line in enumerate(f.readlines()):
+                prompts.raw_datasets.append(json.loads(line))
+                if i == 9:
+                    break
+        prompts = [p['prompt'] for p in prompts]
 
-    prompt_eval(args, model_baseline, model_fintuned, tokenizer, device,
-                prompts)
+    prompt_eval(args, model_baseline, model_fintuned, tokenizer, device, prompts)
 
 
 if __name__ == "__main__":
