@@ -42,12 +42,7 @@ step_dirs = {
 model_type = {1: "actor", 2: "reward", 3: "step3"}
 dse_url = "https://github.com/microsoft/DeepSpeedExamples/tree/master/applications/DeepSpeed-Chat/"
 
-# python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir bloomz-560m-523 --step 1 2 3
-
-# == reward_model debug
-# python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2
-# b training/step2_reward_model_finetuning/main.py:302
-# python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2 3
+# python train_bloomz-keyword.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir keyword-bloomz-7b1-sft --step 1
 
 
 def parse_args():
@@ -62,13 +57,10 @@ def parse_args():
     )
     parser.add_argument(
         "--actor-model",
-        # type=lambda x: x.replace("facebook/opt-", ""),
-        # default="1.3b",
-        # choices=("1.3b", "6.7b", "13b", "66b"),
-        type=lambda x: x.replace("bigscience/", ""),
-        default="bloomz-7b1",
-        choices=("bloomz-560m", "bloomz-7b1", "bloomz"),
-        help="Which bigscience/bloomz model to use for Actor (step 1)",
+        # type=lambda x: x.replace("bigscience/", ""),
+        # default="bloomz-7b1",
+        # choices=("bloomz-560m", "bloomz-7b1", "bloomz"),
+        # help="Which bigscience/bloomz model to use for Actor (step 1)",
     )
     parser.add_argument(
         "--reward-model",
