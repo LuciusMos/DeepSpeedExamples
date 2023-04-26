@@ -185,7 +185,7 @@ class RewardModel(nn.Module):
             bs = values.size(0)
             seq_len = input_ids.shape[1]
             chosen_end_scores = [
-            ]  # we use this name for consistency with the original forwad function
+            ]  # we use this name for consistency with the original forward function
             for i in range(bs):
                 input_id = input_ids[i]
                 value = values[i]
