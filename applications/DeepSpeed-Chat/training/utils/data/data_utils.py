@@ -27,6 +27,8 @@ def get_raw_dataset(dataset_name, output_path, seed, local_rank):
                                                     local_rank, dataset_name)
     elif "phd_qualified_seeds" in dataset_name:
         return raw_datasets.PhdQualifiedSeedsDataset(output_path, seed, local_rank)
+    elif "keyword" in dataset_name:
+        return raw_datasets.keywordDataset(output_path, seed, local_rank)
     elif "Dahoas/synthetic-instruct-gptj-pairwise" in dataset_name:
         return raw_datasets.DahoasSyntheticinstructgptjpairwiseDataset(
             output_path, seed, local_rank, dataset_name)
@@ -333,6 +335,7 @@ def create_prompt_dataset(local_rank,
     train_dataset, eval_dataset = torch.load(train_fname), torch.load(eval_fname)
     print('【【data_utils/create_prompt_dataset, train_phase={}, prepare_this_time={}'.format(
         train_phase, should_prepare_dataset))
+    print('【【train_fname:{}, eval_fname:{}'.format(train_fname, eval_fname))
     print('train_dataset.prompt', len(train_dataset.prompt_dataset), train_dataset.prompt_dataset[:2])
     print('train_dataset.chose', len(train_dataset.chosen_dataset), train_dataset.chosen_dataset[:2])
     print('train_dataset.reject', len(train_dataset.reject_dataset), train_dataset.reject_dataset[:2])

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # DeepSpeed Team
+from utils.model.model_utils import create_hf_model
 import argparse
 import logging
 import torch
@@ -14,9 +15,7 @@ from transformers import (
     AutoTokenizer,
 )
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from utils.model.model_utils import create_hf_model
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def parse_args():
         "--penalty_alpha",
         type=float,
         default=0.6,
-        help='Specify num of beams',
+        help='Specify num of beams',  # todo
     )
     parser.add_argument(
         "--num_return_sequences",
@@ -74,10 +73,9 @@ def parse_args():
     parser.add_argument("--language",
                         type=str,
                         default="English",
-                        choices=["English", "Chinese", "Japanese"])
+                        choices=["English", "Chinese", "Japanese", "phd"])
 
     args = parser.parse_args()
-
     return args
 
 
@@ -241,6 +239,8 @@ def main():
             "Human: 望遠鏡はどのように機能しますか? Assistant:",
             "Human: 鳥が冬に南に移動するのはなぜですか? Assistant:"
         ]
+    elif args.language == "phd":
+        prompts = []  # todo
 
     prompt_eval(args, model_baseline, model_fintuned, tokenizer, device,
                 prompts)

@@ -194,9 +194,9 @@ class RewardModel(nn.Module):
                 value = values[i]
 
                 c_inds = (input_id[prompt_length:] == self.PAD_ID).nonzero()
-                # here we only use the answer part of the sequence so we do not need to care about the padding at the beginning
-                c_ind = c_inds[0].item() + prompt_length if len(
-                    c_inds) > 0 else seq_len
+                # here we only use the answer part of the sequence
+                # so we do not need to care about the padding at the beginning
+                c_ind = c_inds[0].item() + prompt_length if len(c_inds) > 0 else seq_len
                 chosen_end_scores.append(value[c_ind - 1])
             return {
                 "values": values,

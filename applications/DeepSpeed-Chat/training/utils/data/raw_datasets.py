@@ -6,6 +6,7 @@ from datasets import load_dataset
 from torch.utils.data import Subset
 import re
 import random
+import json
 
 
 # The template prompt dataset class that all new dataset porting needs to
@@ -129,8 +130,7 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
                 })
         random.shuffle(self.raw_datasets)
         self.use_ratio = 1.0
-        self.raw_datasets = self.raw_datasets[: int(
-            self.use_ratio * len(self.raw_datasets))]
+        self.raw_datasets = self.raw_datasets[: int(self.use_ratio * len(self.raw_datasets))]
         self.train_ratio = 0.8
 
     def get_train_data(self):
@@ -153,6 +153,50 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
 
     def get_prompt_and_rejected(self, sample):
         return sample['prompt'] + sample['rejected']
+
+
+# Chineses dataset(keyword); SFT
+class keywordDataset(PromptRawDataset):
+
+    def __init__(self, output_path, seed, local_rank):
+        # keys: photo_id, industry, prompt, answer
+        # prompt: <KEYWORD>...
+        # answer: <ANSWER>...
+        # super().__init__(output_path, seed, local_rank)
+        self.output_path = output_path
+        self.seed = seed
+        self.local_rank = local_rank
+        self.dataset_name = "keyword_dataset"
+        self.dataset_name_clean = "keyword_dataset"
+        self.raw_datasets = []
+        with open('/share/zhaoliangxuan/dataset/keyword.json', 'r') as f:
+            self.raw_datasets = json.load(f)
+        random.shuffle(self.raw_datasets)
+        # self.use_ratio = 1.0
+        # self.raw_datasets = self.raw_datasets[: int(self.use_ratio * len(self.raw_datasets))]
+        self.train_ratio = 0.8
+
+    def get_train_data(self):
+        return self.raw_datasets[: int(self.train_ratio * len(self.raw_datasets))]
+
+    def get_eval_data(self):
+        return self.raw_datasets[int(self.train_ratio * len(self.raw_datasets)):]
+
+    def get_prompt(self, sample):
+        return sample['prompt']
+
+    def get_chosen(self, sample):
+        return sample['chosen']
+
+    def get_rejected(self, sample):
+        print(f"Warning: dataset {self.dataset_name} does not include rejected response.")
+        return None
+
+    def get_prompt_and_chosen(self, sample):
+        return sample['prompt'] + sample['chosen']
+
+    def get_prompt_and_rejected(self, sample):
+        print(f"Warning: dataset {self.dataset_name} does not include rejected response.")
 
 
 # English dataset; Reward

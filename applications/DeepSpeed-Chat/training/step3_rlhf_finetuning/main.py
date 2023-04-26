@@ -277,17 +277,13 @@ def parse_args():
     args = parser.parse_args()
 
     # Validate settings
-    if (args.actor_gradient_checkpointing
-            and args.actor_lora_dim > 0) or (args.critic_gradient_checkpointing
-                                             and args.critic_lora_dim > 0):
-        assert (
-            not args.only_optimize_lora
-        ), "--{actor,critic}_gradient_checkpointing and --only_optimize_lora cannot be enabled at the same time."
+    if (args.actor_gradient_checkpointing and args.actor_lora_dim > 0) or \
+            (args.critic_gradient_checkpointing and args.critic_lora_dim > 0):
+        assert not args.only_optimize_lora, \
+            "--{actor,critic}_gradient_checkpointing and --only_optimize_lora cannot be enabled at the same time."
 
     if args.inference_tp_size > 1:
-        assert (
-            args.actor_zero_stage == 3
-        ), "Zero stage 3 must be used to do Tensor sharding in the hybrid engine"
+        assert args.actor_zero_stage == 3, "Zero stage 3 must be used to do Tensor sharding in the hybrid engine"
 
     return args
 
@@ -309,13 +305,11 @@ def create_datasets(args, tokenizer, train_phase=3):
     if args.local_rank == -1:
         prompt_train_sampler = RandomSampler(prompt_train_dataset)
         if unsupervised_training_enabled:
-            unsupervised_train_sampler = RandomSampler(
-                unsupervised_train_dataset)
+            unsupervised_train_sampler = RandomSampler(unsupervised_train_dataset)
     else:
         prompt_train_sampler = DistributedSampler(prompt_train_dataset)
         if unsupervised_training_enabled:
-            unsupervised_train_sampler = DistributedSampler(
-                unsupervised_train_dataset)
+            unsupervised_train_sampler = DistributedSampler(unsupervised_train_dataset)
     prompt_train_dataloader = DataLoader(
         prompt_train_dataset,
         collate_fn=data_collator,

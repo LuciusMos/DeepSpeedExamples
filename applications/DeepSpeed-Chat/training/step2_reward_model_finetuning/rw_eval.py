@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # DeepSpeed Team
+from utils.utils import to_device
+from utils.model.model_utils import create_critic_model
 import argparse
 import os
 import torch
@@ -12,8 +14,6 @@ import sys
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from utils.model.model_utils import create_critic_model
-from utils.utils import to_device
 
 
 def parse_args():
@@ -22,16 +22,14 @@ def parse_args():
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        help=
-        "Path to pretrained model or model identifier from huggingface.co/models.",
+        help="Path to pretrained model or model identifier from huggingface.co/models.",
         required=True,
     )
     parser.add_argument(
         "--num_padding_at_beginning",
         type=int,
         default=1,
-        help=
-        "OPT model has a fixed number (1) of padding tokens at the beginning of the input. "
+        help="OPT model has a fixed number (1) of padding tokens at the beginning of the input. "
         "We did not see this in other models but keep it as an option for now.",
     )
     args = parser.parse_args()
@@ -39,13 +37,9 @@ def parse_args():
 
 
 def load_stuff(model_name_or_path, num_padding_at_beginning):
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path,
-                                              fast_tokenizer=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, fast_tokenizer=True, padding_side="right")
     tokenizer.pad_token = tokenizer.eos_token
-    model = create_critic_model(model_name_or_path, tokenizer, None,
-                                num_padding_at_beginning, True)
-
+    model = create_critic_model(model_name_or_path, tokenizer, None, num_padding_at_beginning, True)
     return model, tokenizer
 
 
