@@ -17,7 +17,7 @@ deepspeed main.py \
    --data_path keyword \
    --data_split 10,0,0 \
    --model_name_or_path bigscience/bloomz-7b1 \
-   --model_cache /data-hxl/model_zoo/models--bigscience--bloomz-7b1 \
+   --model_cache /data/model_zoo \
    --per_device_train_batch_size 16 \
    --per_device_eval_batch_size 16 \
    --max_seq_len 800 \
