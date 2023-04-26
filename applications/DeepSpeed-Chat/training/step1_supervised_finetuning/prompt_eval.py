@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # DeepSpeed Team
-from utils.model.model_utils import create_hf_model
 import argparse
 import logging
 import torch
@@ -17,6 +16,7 @@ from transformers import (
 )
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from utils.model.model_utils import create_hf_model  # noqa
 
 logger = logging.getLogger(__name__)
 
