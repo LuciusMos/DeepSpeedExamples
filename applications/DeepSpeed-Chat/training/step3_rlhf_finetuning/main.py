@@ -17,27 +17,30 @@ for prompt_batch in prompt_train_dataloader:
 
 """
 import sys
-from rlhf_engine import DeepSpeedRLHFEngine
-from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
-import deepspeed
+import argparse
+import os
+import random
+import torch
+from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data import DataLoader, RandomSampler
+
 from transformers import (
     AutoTokenizer,
     SchedulerType,
     default_data_collator,
 )
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data import DataLoader, RandomSampler
-import torch
-import random
-import argparse
-import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+import deepspeed
+
+from rlhf_engine import DeepSpeedRLHFEngine
+from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from utils.module.lora import convert_lora_to_linear_layer  # noqa
 from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model  # noqa
 from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data  # noqa
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def parse_args():
