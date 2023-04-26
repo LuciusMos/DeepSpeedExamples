@@ -170,7 +170,8 @@ class keywordDataset(PromptRawDataset):
         self.dataset_name_clean = "keyword_dataset"
         self.raw_datasets = []
         with open('/share/zhaoliangxuan/dataset/keyword.json', 'r') as f:
-            self.raw_datasets = json.load(f)
+            for line in f.readlines():
+                self.raw_datasets.append(json.loads(line))
         random.shuffle(self.raw_datasets)
         # self.use_ratio = 1.0
         # self.raw_datasets = self.raw_datasets[: int(self.use_ratio * len(self.raw_datasets))]
