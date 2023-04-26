@@ -30,19 +30,19 @@ deepspeed --master_port 12346 main.py \
    --actor_model_name_or_path $ACTOR_MODEL_PATH \
    --critic_model_name_or_path $CRITIC_MODEL_PATH \
    --num_padding_at_beginning 0 \
-   --per_device_train_batch_size 16 \
-   --per_device_mini_train_batch_size 16 \
+   --per_device_train_batch_size 2 \
+   --per_device_mini_train_batch_size 2 \
    --generation_batch_numbers 1 \
    --ppo_epochs 1 \
-   --max_answer_seq_len 256 \
-   --max_prompt_seq_len 256 \
+   --max_answer_seq_len 512 \
+   --max_prompt_seq_len 512 \
    --actor_learning_rate ${Actor_Lr} \
    --critic_learning_rate ${Critic_Lr} \
    --actor_weight_decay 0.1 \
    --critic_weight_decay 0.1 \
    --num_train_epochs 1 \
    --lr_scheduler_type cosine \
-   --gradient_accumulation_steps 1 \
+   --gradient_accumulation_steps 8 \
    --num_warmup_steps 100 \
    --deepspeed --seed 1234 \
    --enable_hybrid_engine \
