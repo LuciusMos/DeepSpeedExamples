@@ -162,7 +162,6 @@ class keywordDataset(PromptRawDataset):
         # keys: photo_id, industry, prompt, answer
         # prompt: <KEYWORD>...
         # answer: <ANSWER>...
-        # super().__init__(output_path, seed, local_rank)
         self.output_path = output_path
         self.seed = seed
         self.local_rank = local_rank
@@ -187,14 +186,14 @@ class keywordDataset(PromptRawDataset):
         return sample['prompt']
 
     def get_chosen(self, sample):
-        return sample['chosen']
+        return sample['answer']
 
     def get_rejected(self, sample):
         print(f"Warning: dataset {self.dataset_name} does not include rejected response.")
         return None
 
     def get_prompt_and_chosen(self, sample):
-        return sample['prompt'] + sample['chosen']
+        return sample['prompt'] + sample['answer']
 
     def get_prompt_and_rejected(self, sample):
         print(f"Warning: dataset {self.dataset_name} does not include rejected response.")
