@@ -17,12 +17,13 @@ deepspeed main.py \
    --data_path phd_qualified_seeds \
    --data_split 5,2,3 \
    --model_name_or_path bigscience/bloomz-560m \
+   --model_cache /data/model_zoo \
    --num_padding_at_beginning 0 \
-   --per_device_train_batch_size 16 \
-   --per_device_eval_batch_size 16 \
+   --per_device_train_batch_size 8 \
+   --per_device_eval_batch_size 8 \
    --gradient_accumulation_steps 1 \
    --max_seq_len 1024 \
-   --learning_rate 1e-4 \
+   --learning_rate 5e-5 \
    --weight_decay 0.1 \
    --num_train_epochs 2 \
    --lr_scheduler_type cosine \
