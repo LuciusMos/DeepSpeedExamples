@@ -54,11 +54,12 @@ def create_critic_model(model_name_or_path,
                         ds_config,
                         num_padding_at_beginning=0,
                         rlhf_training=False,
-                        disable_dropout=False):
+                        disable_dropout=False,
+                        model_cache=None):
     # OPT model family always put a padding token at the beginning of the sequence,
     # we did not see this in other models but not sure if it is a general rule
     critic_model = create_hf_model(AutoModel, model_name_or_path, tokenizer,
-                                   ds_config, rlhf_training, disable_dropout)
+                                   ds_config, rlhf_training, disable_dropout, model_cache)
     critic_model = RewardModel(
         critic_model,
         tokenizer,

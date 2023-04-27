@@ -67,6 +67,7 @@ def parse_args():
     parser.add_argument(
         "--model_cache",
         type=str,
+        default=None,
         help="Path to cached pretrained model",
     )
     parser.add_argument(

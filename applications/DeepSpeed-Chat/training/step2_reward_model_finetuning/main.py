@@ -57,6 +57,12 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
+        "--model_cache",
+        type=str,
+        default=None,
+        help="Path to cached pretrained model",
+    )
+    parser.add_argument(
         "--num_padding_at_beginning",
         type=int,
         default=1,
@@ -201,7 +207,8 @@ def main():
                                    tokenizer,
                                    ds_config,
                                    args.num_padding_at_beginning,
-                                   disable_dropout=args.disable_dropout)
+                                   disable_dropout=args.disable_dropout,
+                                   model_cache=args.model_cache)
 
     if args.lora_dim > 0:
         rm_model = convert_linear_layer_to_lora(rm_model,
