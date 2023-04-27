@@ -128,6 +128,7 @@ def get_zero_stage(args, step_num):
 
 
 def get_output_dir(args, step_num):
+    # bloomz-560m-523/actor-models/bloomz-7b1
     model_size = get_model_size(args, step_num)
     output_dir = os.path.join(args.output_dir,
                               f"{model_type[step_num]}-models",

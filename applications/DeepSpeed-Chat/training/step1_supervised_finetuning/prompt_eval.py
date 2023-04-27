@@ -209,8 +209,7 @@ def main():
 
     device = torch.device("cuda:0")
     config = AutoConfig.from_pretrained(args.model_name_or_path_baseline)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path_baseline,
-                                              fast_tokenizer=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path_baseline, fast_tokenizer=True)
 
     model_baseline = create_hf_model(AutoModelForCausalLM,
                                      args.model_name_or_path_baseline,
