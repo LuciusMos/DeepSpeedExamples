@@ -322,8 +322,7 @@ def create_datasets(args, tokenizer, train_phase=3):
             sampler=unsupervised_train_sampler,
             batch_size=args.per_device_train_batch_size)
     else:
-        unsupervised_train_dataloader = [None] * len(
-            prompt_train_dataloader)  # basically a dummy dataloader
+        unsupervised_train_dataloader = [None] * len(prompt_train_dataloader)  # basically a dummy dataloader
 
     num_update_steps_per_epoch = min(len(prompt_train_dataloader), len(unsupervised_train_dataloader)) * \
         (args.per_device_train_batch_size / args.per_device_mini_train_batch_size) * \
@@ -384,8 +383,8 @@ def main():
     # TODO: mini_dataset is to seperate dataloader batch to several GPUs
     # First parameter is how many experience-batch to generate
     # Second parameter is the training batch size, which is the micro-batch size used
-    exp_mini_dataset = MiniDataset(args.generation_batch_numbers,
-                                   args.per_device_mini_train_batch_size)
+    exp_mini_dataset = MiniDataset(args.generation_batch_numbers,  # max_size
+                                   args.per_device_mini_train_batch_size)  # small_batch_size
     unsup_mini_dataset = MiniDataset(args.generation_batch_numbers,
                                      args.per_device_mini_train_batch_size)
 
@@ -403,17 +402,17 @@ def main():
                 batch_unsupervised = to_device(batch_unsupervised, device)
                 unsup_dataset = unsup_mini_dataset.add(batch_unsupervised)
             else:
-                unsup_dataset = unsup_mini_dataset.add(
-                    [[None] * args.per_device_train_batch_size])
+                unsup_dataset = unsup_mini_dataset.add([[None] * args.per_device_train_batch_size])
             prompts = batch_prompt['prompt']
             length = prompts.size(-1)
             if length > args.max_prompt_seq_len:
                 prompts = prompts[:, length - args.max_prompt_seq_len:]
                 raise ValueError("Prompt length is too long")
 
-            # out is a dict with keys: 'prompts', 'logprobs', 'ref_logprobs', 'value', 'rewards', 'input_ids', "attention_mask"
+            # out is a dict with keys: 'prompts', 'logprobs', 'ref_logprobs',
+            #                          'value', 'rewards', 'input_ids', "attention_mask"
             out = trainer.generate_experience(prompts)
-            exp_dataset = exp_mini_dataset.add(out)
+            exp_dataset = exp_mini_dataset.add(out)  # add + seperate + clear
 
             if exp_dataset is not None:
                 inner_iter = 0
@@ -424,16 +423,14 @@ def main():
                     rlhf_engine.actor.gradient_checkpointing_enable()
 
                 for ppo_ep in range(args.ppo_epochs):
-                    for i, (exp_data, unsup_data) in enumerate(
-                            zip(exp_dataset, unsup_dataset)):
+                    for i, (exp_data, unsup_data) in enumerate(zip(exp_dataset, unsup_dataset)):
                         actor_loss, critic_loss = trainer.train_rlhf(exp_data)
                         actor_loss_sum += actor_loss.item()
                         critic_loss_sum += critic_loss.item()
                         average_reward += exp_data["rewards"].mean()
 
                         if unsupervised_training_enabled:
-                            unsup_loss = trainer.train_unsupervised(
-                                unsup_data, args.unsup_coef)
+                            unsup_loss = trainer.train_unsupervised(unsup_data, args.unsup_coef)
                             unsup_loss_sum += unsup_loss.item()
 
                         inner_iter += 1
@@ -449,9 +446,7 @@ def main():
                     f'epoch: {epoch}|step: {step}|ppo_ep: {ppo_ep+1}|act_loss: {actor_loss_sum/inner_iter}|cri_loss: {critic_loss_sum/inner_iter}|unsuper_loss: {unsup_loss_sum/inner_iter}',
                     args.global_rank)
                 average_reward = get_all_reduce_mean(average_reward).item()
-                print_rank_0(
-                    f"average reward score: {average_reward/inner_iter}",
-                    args.global_rank)
+                print_rank_0(f"average reward score: {average_reward/inner_iter}", args.global_rank)
                 print_rank_0(
                     "-------------------------------------------------------------------------------------",
                     args.global_rank)
@@ -464,8 +459,7 @@ def main():
         rlhf_engine.actor = convert_lora_to_linear_layer(rlhf_engine.actor)
         rlhf_engine.critic = convert_lora_to_linear_layer(rlhf_engine.critic)
         if args.enable_ema:
-            rlhf_engine.actor_ema = convert_lora_to_linear_layer(
-                rlhf_engine.actor_ema)
+            rlhf_engine.actor_ema = convert_lora_to_linear_layer(rlhf_engine.actor_ema)
 
         if torch.distributed.get_rank() == 0:
             save_hf_format(rlhf_engine.actor,

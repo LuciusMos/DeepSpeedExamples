@@ -114,14 +114,12 @@ def _z3_params_to_fetch(param_list):
 def moving_average(model, model_ema, beta=0.992, device=None, zero_stage=0):
     zero_stage_3 = (zero_stage == 3)
     with torch.no_grad():
-        for param, param_ema in zip(model.parameters(),
-                                    model_ema.parameters()):
+        for param, param_ema in zip(model.parameters(), model_ema.parameters()):
             # TODO: use prefiltering for efficiency
             params_to_fetch = _z3_params_to_fetch([param, param_ema
                                                    ]) if zero_stage_3 else []
             should_gather_param = len(params_to_fetch) > 0
-            with deepspeed.zero.GatheredParameters(
-                    params_to_fetch, enabled=should_gather_param):
+            with deepspeed.zero.GatheredParameters(params_to_fetch, enabled=should_gather_param):
                 data = param.data
                 if device is not None:
                     data = data.to(device)

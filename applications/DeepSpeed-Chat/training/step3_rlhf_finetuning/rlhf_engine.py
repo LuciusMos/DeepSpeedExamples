@@ -51,10 +51,8 @@ class DeepSpeedRLHFEngine():
         self.num_total_iters = num_total_iters
         self.tokenizer = tokenizer
 
-        self.actor = self._init_actor(
-            actor_model_name_or_path=actor_model_name_or_path)
-        self.ref = self._init_ref(
-            actor_model_name_or_path=actor_model_name_or_path)
+        self.actor = self._init_actor(actor_model_name_or_path=actor_model_name_or_path)
+        self.ref = self._init_ref(actor_model_name_or_path=actor_model_name_or_path)
         self.actor_ema = None
         if self.args.enable_ema:
             self.actor_ema = self._init_ema(

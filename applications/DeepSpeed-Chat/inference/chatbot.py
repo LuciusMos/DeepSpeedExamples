@@ -8,7 +8,7 @@ import re
 import logging
 import transformers  # noqa: F401
 from transformers import pipeline, set_seed
-from transformers import AutoConfig, OPTForCausalLM, AutoTokenizer
+from transformers import AutoConfig, OPTForCausalLM, AutoTokenizer, AutoModelForCausalLM
 
 
 def parse_args():
@@ -31,13 +31,19 @@ def get_generator(path):
     tokenizer.pad_token = tokenizer.eos_token
 
     model_config = AutoConfig.from_pretrained(path)
-    model = OPTForCausalLM.from_pretrained(path,
-                                           from_tf=bool(".ckpt" in path),
-                                           config=model_config).half()
+    # model = OPTForCausalLM.from_pretrained(path,
+    #                                        from_tf=bool(".ckpt" in path),
+    #                                        config=model_config).half()
+    model_config.dropout = 0.0
+    model = AutoModelForCausalLM.from_pretrained(
+        path,
+        from_tf=bool(".ckpt" in path),
+        config=model_config
+    )
 
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
-    model.resize_token_embeddings(len(tokenizer))
+    # model.resize_token_embeddings(len(tokenizer))
     generator = pipeline("text-generation",
                          model=model,
                          tokenizer=tokenizer,
@@ -58,6 +64,7 @@ def get_model_response(generator, user_input, max_new_tokens):
 
 
 def process_response(response, num_rounds):
+    # process model output response
     output = str(response[0]["generated_text"])
     output = output.replace("<|endoftext|></s>", "")
     all_positions = [m.start() for m in re.finditer("Human: ", output)]
@@ -65,7 +72,7 @@ def process_response(response, num_rounds):
     if len(all_positions) > num_rounds:
         place_of_second_q = all_positions[num_rounds]
     if place_of_second_q != -1:
-        output = output[0:place_of_second_q]
+        output = output[0: place_of_second_q]
     return output
 
 
