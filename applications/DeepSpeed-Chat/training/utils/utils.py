@@ -56,7 +56,9 @@ def save_hf_format(model, tokenizer, args, sub_folder=""):
             del save_dict[key]
     torch.save(save_dict, output_model_file)
     model_to_save.config.to_json_file(output_config_file)
-    tokenizer.save_vocabulary(output_dir)
+    # OPT can load from only vocabulary, but bloom cannot, so must use `save_pretrained`
+    # tokenizer.save_vocabulary(output_dir)
+    tokenizer.save_pretrained(output_dir)
 
 
 def set_random_seed(seed):
@@ -132,8 +134,7 @@ def save_zero_three_model(model_ema, global_rank, save_dir, zero_stage=0):
     WEIGHTS_NAME = "pytorch_model.bin"
     output_model_file = os.path.join(save_dir, WEIGHTS_NAME)
 
-    model_to_save = model_ema.module if hasattr(model_ema,
-                                                'module') else model_ema
+    model_to_save = model_ema.module if hasattr(model_ema, 'module') else model_ema
     if not zero_stage_3:
         if global_rank == 0:
             torch.save(model_to_save.state_dict(), output_model_file)
@@ -142,9 +143,7 @@ def save_zero_three_model(model_ema, global_rank, save_dir, zero_stage=0):
         for k, v in model_to_save.named_parameters():
 
             if hasattr(v, 'ds_id'):
-                with deepspeed.zero.GatheredParameters(_z3_params_to_fetch([v
-                                                                            ]),
-                                                       enabled=zero_stage_3):
+                with deepspeed.zero.GatheredParameters(_z3_params_to_fetch([v]), enabled=zero_stage_3):
                     v_p = v.data.cpu()
             else:
                 v_p = v.cpu()

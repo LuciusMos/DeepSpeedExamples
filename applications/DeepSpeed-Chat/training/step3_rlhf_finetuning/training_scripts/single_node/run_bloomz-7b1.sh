@@ -30,8 +30,8 @@ deepspeed --master_port 12346 main.py \
    --actor_model_name_or_path $ACTOR_MODEL_PATH \
    --critic_model_name_or_path $CRITIC_MODEL_PATH \
    --num_padding_at_beginning ${Num_Padding_at_Beginning} \
-   --per_device_train_batch_size 2 \
-   --per_device_mini_train_batch_size 2 \
+   --per_device_train_batch_size 4 \
+   --per_device_mini_train_batch_size 4 \
    --generation_batch_numbers 1 \
    --ppo_epochs 1 \
    --max_answer_seq_len 512 \
@@ -42,10 +42,10 @@ deepspeed --master_port 12346 main.py \
    --critic_weight_decay 0.1 \
    --num_train_epochs 1 \
    --lr_scheduler_type cosine \
-   --gradient_accumulation_steps 8 \
+   --gradient_accumulation_steps 4 \
    --num_warmup_steps 100 \
-   --deepspeed --seed 1234 \
-   --enable_hybrid_engine \
+   --deepspeed \
+   --seed 1234 \
    --inference_tp_size 2 \
    --actor_zero_stage $ACTOR_ZERO_STAGE \
    --critic_zero_stage $CRITIC_ZERO_STAGE \
@@ -54,3 +54,6 @@ deepspeed --master_port 12346 main.py \
    --actor_lora_module_name decoder.layers. \
    --output_dir $OUTPUT \
     &> $OUTPUT/training.log
+
+# Do not support llama hybrid engine
+#    --enable_hybrid_engine \
