@@ -52,8 +52,7 @@ class DeepSpeedPPOTrainer():
         self.tokenizer = self.rlhf_engine.tokenizer
         self.args = args
         self.max_answer_seq_len = args.max_answer_seq_len
-        self.end_of_conversation_token_id = self.tokenizer(
-            args.end_of_conversation_token)['input_ids'][-1]
+        self.end_of_conversation_token_id = self.tokenizer(args.end_of_conversation_token)['input_ids'][-1]
 
         # Those value can be changed
         self.kl_ctl = 0.02
@@ -71,8 +70,9 @@ class DeepSpeedPPOTrainer():
                                                    max_length=max_min_length,
                                                    min_length=max_min_length)
 
-        # Filter out seq with no answers (or very short). This happens when users directly use the pre-training ckpt without supervised finetuning
-        # NOTE: this will causes each GPU has different number of examples
+        # Filter out seq with no answers (or very short).
+        # This happens when users directly use the pre-training ckpt without supervised finetuning
+        # NOTE: this will cause each GPU has different number of examples
         batch_size = seq.shape[0]
         prompt_length = prompts.shape[1]
         ans = seq[:, prompt_length:]
@@ -80,8 +80,7 @@ class DeepSpeedPPOTrainer():
         valid_ans_len = (ans != self.tokenizer.pad_token_id).sum(dim=-1)
         out_seq = []
         for i in range(batch_size):
-            if valid_ans_len[
-                    i] <= 1:  # if the answer is shorter than 1 token, drop it
+            if valid_ans_len[i] <= 1:  # if the answer is shorter than 1 token, drop it
                 continue
             else:
                 out_seq.append(seq[i:i + 1])

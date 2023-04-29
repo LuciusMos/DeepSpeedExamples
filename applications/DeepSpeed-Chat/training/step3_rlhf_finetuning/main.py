@@ -300,8 +300,7 @@ def create_datasets(args, tokenizer, train_phase=3):
         unsupervised_train_dataset = None
 
     # DataLoaders creation:
-    data_collator = DataCollatorRLHF(args.max_prompt_seq_len,
-                                     args.inference_tp_size)
+    data_collator = DataCollatorRLHF(args.max_prompt_seq_len, args.inference_tp_size)
     if args.local_rank == -1:
         prompt_train_sampler = RandomSampler(prompt_train_dataset)
         if unsupervised_training_enabled:
@@ -358,8 +357,8 @@ def main():
     set_random_seed(args.seed)
     torch.distributed.barrier()
 
-    # create common tokenizer based on actor model
-    tokenizer = AutoTokenizer.from_pretrained(args.actor_model_name_or_path, fast_tokenizer=True, padding_side="right")
+    # create common tokenizer based on actor model, step3 generating answer should use left-padding
+    tokenizer = AutoTokenizer.from_pretrained(args.actor_model_name_or_path, fast_tokenizer=True, padding_side="left")
     tokenizer.pad_token = tokenizer.eos_token
 
     # create dataloaders (prompt + unsupervised)
@@ -383,7 +382,7 @@ def main():
     # TODO: mini_dataset is to seperate dataloader batch to several GPUs
     # First parameter is how many experience-batch to generate
     # Second parameter is the training batch size, which is the micro-batch size used
-    exp_mini_dataset = MiniDataset(args.generation_batch_numbers,  # max_size
+    exp_mini_dataset = MiniDataset(args.generation_batch_numbers,  # max_size, default = 1
                                    args.per_device_mini_train_batch_size)  # small_batch_size
     unsup_mini_dataset = MiniDataset(args.generation_batch_numbers,
                                      args.per_device_mini_train_batch_size)

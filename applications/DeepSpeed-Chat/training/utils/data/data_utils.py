@@ -151,8 +151,7 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
     if train_phase == 1:
         for i, tmp_data in enumerate(current_dataset):
             # tokenize the text
-            chosen_sentence = raw_dataset.get_prompt_and_chosen(
-                tmp_data)  # the accept response
+            chosen_sentence = raw_dataset.get_prompt_and_chosen(tmp_data)  # the accept response
             if chosen_sentence is not None:
                 chosen_sentence += end_of_conversation_token
                 chosen_token = tokenizer(chosen_sentence,
@@ -201,15 +200,12 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
                 for key_word in ["input_ids", "attention_mask"]:
                     length = prompt_token[key_word].size()[-1]
                     if length > max_seq_len:
-                        y = prompt_token[key_word].squeeze(0)[length -
-                                                              (max_seq_len -
-                                                               1):].flip(0)
+                        y = prompt_token[key_word].squeeze(0)[length - (max_seq_len - 1):].flip(0)
                     else:
                         y = prompt_token[key_word].squeeze(0).flip(0)
                     prompt_token[key_word] = y
                 prompt_dataset.append(prompt_token)
-    return PromptDataset(prompt_dataset, chosen_dataset, reject_dataset,
-                         tokenizer.pad_token_id, train_phase)
+    return PromptDataset(prompt_dataset, chosen_dataset, reject_dataset, tokenizer.pad_token_id, train_phase)
 
 
 def create_dataset(local_rank, dataset_name, data_split, output_path,
@@ -396,8 +392,7 @@ class DataCollatorRLHF:
 
 
 def get_unsupervised_data(args, tokenizer):
-    unsupervised_raw_datasets = load_dataset(
-        args.unsupervised_dataset_name, args.unsupervised_dataset_config_name)
+    unsupervised_raw_datasets = load_dataset(args.unsupervised_dataset_name, args.unsupervised_dataset_config_name)
     column_names = unsupervised_raw_datasets["train"].column_names
     text_column_name = "text" if "text" in column_names else column_names[0]
 
