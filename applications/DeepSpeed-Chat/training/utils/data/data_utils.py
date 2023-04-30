@@ -246,7 +246,8 @@ def create_prompt_dataset(local_rank,
                           tokenizer,
                           max_seq_len,
                           end_of_conversation_token="<|endoftext|>",
-                          sft_only_data_path=[]):
+                          sft_only_data_path=[],
+                          force_prepare=False):
     """
     Creates the prompt dataset
     """
@@ -256,8 +257,7 @@ def create_prompt_dataset(local_rank,
     tokenizer_name = tokenizer.init_kwargs["name_or_path"].replace("/", "_")
     fname = f"{fname}_split{data_split}_phase{train_phase}_seed{seed}_tokenizer{tokenizer_name}_seqlen{max_seq_len}_sft{sft_cache_key}"
     fname = "_".join(fname.split("/"))
-    fname = hashlib.sha256(fname.encode()).hexdigest(
-    )  # hash the file name to avoid too long file name
+    fname = hashlib.sha256(fname.encode()).hexdigest()  # hash the file name to avoid too long file name
     train_fname = f"{output_path}/traindata_{fname}.pt"
     eval_fname = f"{output_path}/evaldata_{fname}.pt"
 
@@ -267,6 +267,9 @@ def create_prompt_dataset(local_rank,
 
     # rank > 0 or dataset already cached do not need to prepare dataset this time
     should_prepare_dataset = local_rank <= 0 and buf_create_cache.item() != 0
+    # if this step asks to prepare
+    if force_prepare:
+        should_prepare_dataset = True
     if should_prepare_dataset:
         if len(data_path) == 1:  # Single dataset.
             train_dataset, eval_dataset = create_dataset(
