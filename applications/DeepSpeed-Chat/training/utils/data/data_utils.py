@@ -92,8 +92,7 @@ def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
         splits = [split / splits_sum for split in splits]
         splits_index = [0]
         for index, split in enumerate(splits):
-            splits_index.append(splits_index[index] +
-                                int(round(split * float(data_size))))
+            splits_index.append(splits_index[index] + int(round(split * float(data_size))))
         diff = splits_index[-1] - data_size
         for index in range(1, len(splits_index)):
             splits_index[index] -= diff
@@ -257,7 +256,10 @@ def create_prompt_dataset(local_rank,
     tokenizer_name = tokenizer.init_kwargs["name_or_path"].replace("/", "_")
     fname = f"{fname}_split{data_split}_phase{train_phase}_seed{seed}_tokenizer{tokenizer_name}_seqlen{max_seq_len}_sft{sft_cache_key}"
     fname = "_".join(fname.split("/"))
+    print('【【data_utils/create_prompt_dataset')
+    print('original fname:', fname)
     fname = hashlib.sha256(fname.encode()).hexdigest()  # hash the file name to avoid too long file name
+    print('hashed fname:', fname)
     train_fname = f"{output_path}/traindata_{fname}.pt"
     eval_fname = f"{output_path}/evaldata_{fname}.pt"
 

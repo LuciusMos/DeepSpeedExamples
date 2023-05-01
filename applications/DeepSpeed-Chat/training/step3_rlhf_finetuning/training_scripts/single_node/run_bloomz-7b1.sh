@@ -27,6 +27,7 @@ Critic_Lr=5e-6
 deepspeed --master_port 12346 main.py \
    --data_path phd_qualified_seeds \
    --data_split 5,2,3 \
+   --enable_ema \
    --actor_model_name_or_path $ACTOR_MODEL_PATH \
    --critic_model_name_or_path $CRITIC_MODEL_PATH \
    --num_padding_at_beginning ${Num_Padding_at_Beginning} \
@@ -34,8 +35,8 @@ deepspeed --master_port 12346 main.py \
    --per_device_mini_train_batch_size 4 \
    --generation_batch_numbers 1 \
    --ppo_epochs 1 \
-   --max_answer_seq_len 512 \
-   --max_prompt_seq_len 512 \
+   --max_answer_seq_len 900 \
+   --max_prompt_seq_len 1200 \
    --actor_learning_rate ${Actor_Lr} \
    --critic_learning_rate ${Critic_Lr} \
    --actor_weight_decay 0.1 \

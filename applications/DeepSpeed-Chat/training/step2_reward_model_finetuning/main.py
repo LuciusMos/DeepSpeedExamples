@@ -36,8 +36,7 @@ def parse_args():
                         nargs='*',
                         default=['Dahoas/rm-static'],
                         help='Path to the training dataset. Accepted format:'
-                        '1) a single data path, 2) multiple datasets in the'
-                        'form: dataset1-path dataset2-path ...')
+                        '1) a single data path, 2) multiple datasets in the form: dataset1-path dataset2-path ...')
     parser.add_argument('--data_split',
                         type=str,
                         default='6,2,2',

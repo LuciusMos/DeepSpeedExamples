@@ -78,9 +78,7 @@ def get_all_reduce_mean(tensor):
 
 def get_optimizer_grouped_parameters(model,
                                      weight_decay,
-                                     no_decay_name_list=[
-                                         "bias", "LayerNorm.weight"
-                                     ]):
+                                     no_decay_name_list=["bias", "LayerNorm.weight"]):
     optimizer_grouped_parameters = [
         {
             "params": [
