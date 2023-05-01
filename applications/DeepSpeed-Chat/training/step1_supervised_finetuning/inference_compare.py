@@ -233,18 +233,21 @@ def main():
     set_random_seed(args.seed)
 
     device = torch.device("cuda:0")
-    config = AutoConfig.from_pretrained(args.model_name_or_path_baseline)
     tokenizer = AutoTokenizer.from_pretrained(
         args.model_name_or_path_final,
         fast_tokenizer=True,
         # step 1 & 2 use right-padding, step 3 uses left-padding
         padding_side="right")
 
+    # model_baseline = create_hf_model(AutoModelForCausalLM,
+    #                             args.model_name_or_path_baseline,
+    #                             tokenizer,
+    #                             None,
+    #                             model_cache=args.model_baseline_cache)
     model_sft = create_hf_model(AutoModelForCausalLM,
                                 args.model_name_or_path_sft,
                                 tokenizer,
-                                None,
-                                model_cache=args.model_baseline_cache)
+                                None)
     model_final = create_hf_model(AutoModelForCausalLM,
                                   args.model_name_or_path_final,
                                   tokenizer,
