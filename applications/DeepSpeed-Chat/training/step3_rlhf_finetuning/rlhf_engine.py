@@ -58,10 +58,8 @@ class DeepSpeedRLHFEngine():
             self.actor_ema = self._init_ema(
                 actor_model_name_or_path=actor_model_name_or_path)
 
-        self.critic = self._init_critic(
-            critic_model_name_or_path=critic_model_name_or_path)
-        self.reward = self._init_reward(
-            critic_model_name_or_path=critic_model_name_or_path)
+        self.critic = self._init_critic(critic_model_name_or_path=critic_model_name_or_path)
+        self.reward = self._init_reward(critic_model_name_or_path=critic_model_name_or_path)
         if self.args.critic_gradient_checkpointing:
             self.critic.gradient_checkpointing_enable()
 
@@ -79,12 +77,14 @@ class DeepSpeedRLHFEngine():
             tp_gather_partition_size=self.args.tp_gather_partition_size,
             max_out_tokens=self.args.max_prompt_seq_len +
             self.args.max_answer_seq_len)
-        ds_config[
-            'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
+        ds_config['train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
         # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
-        ds_config[
-            'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-        ) * self.args.gradient_accumulation_steps_actor
+        ds_config['train_batch_size'] = self.args.per_device_mini_train_batch_size * \
+            torch.distributed.get_world_size() * self.args.gradient_accumulation_steps_actor
+        ds_config['wandb'] = {
+            "enabled": True,
+            "team": "ks-creative-ad-llm",
+            "project": "dschat-ppo"}
 
         # Model
         actor_model = create_hf_model(
@@ -136,14 +136,11 @@ class DeepSpeedRLHFEngine():
         if zero_stage != 3:
             # If actor is ZeRO-3 then we use it for everything, otherwise assume we have enough memory for ref model
             zero_stage = 0
-        ds_config = get_eval_ds_config(self.args.offload_reference_model,
-                                       zero_stage)
-        ds_config[
-            'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
+        ds_config = get_eval_ds_config(self.args.offload_reference_model, zero_stage)
+        ds_config['train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
         # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
-        ds_config[
-            'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-        ) * self.args.gradient_accumulation_steps_actor
+        ds_config['train_batch_size'] = self.args.per_device_mini_train_batch_size * \
+            torch.distributed.get_world_size() * self.args.gradient_accumulation_steps_actor
 
         ref_model = create_hf_model(AutoModelForCausalLM,
                                     actor_model_name_or_path, self.tokenizer,
@@ -162,14 +159,11 @@ class DeepSpeedRLHFEngine():
         if zero_stage != 3:
             # If actor is ZeRO-3 then we use it for everything, otherwise assume we have enough memory
             zero_stage = 0
-        ds_config = get_eval_ds_config(self.args.offload_reference_model,
-                                       zero_stage)
-        ds_config[
-            'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
+        ds_config = get_eval_ds_config(self.args.offload_reference_model, zero_stage)
+        ds_config['train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
         # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
-        ds_config[
-            'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-        ) * self.args.gradient_accumulation_steps_actor
+        ds_config['train_batch_size'] = self.args.per_device_mini_train_batch_size * \
+            torch.distributed.get_world_size() * self.args.gradient_accumulation_steps_actor
 
         actor_model_ema = create_hf_model(AutoModelForCausalLM,
                                           actor_model_name_or_path,
@@ -187,12 +181,15 @@ class DeepSpeedRLHFEngine():
 
     def _init_critic(self, critic_model_name_or_path):
         stime = log_init("Critic")
-        ds_config = get_train_ds_config(offload=self.args.offload,
-                                        stage=self.args.critic_zero_stage)
+        ds_config = get_train_ds_config(offload=self.args.offload, stage=self.args.critic_zero_stage)
         ds_config['train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
         # TODO(jeff): we should probably set grad accumlation steps here as well for clarity
         ds_config['train_batch_size'] = self.args.per_device_mini_train_batch_size * \
             torch.distributed.get_world_size() * self.args.gradient_accumulation_steps
+        ds_config['wandb'] = {
+            "enabled": True,
+            "team": "ks-creative-ad-llm",
+            "project": "dschat-ppo"}
 
         # TODO(jeff): should not be needed, we should be able to use ds_config above
         # TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
@@ -248,13 +245,10 @@ class DeepSpeedRLHFEngine():
             # If critic is ZeRO-3 then we use it for everything, otherwise assume we have enough memory
             zero_stage = 0
 
-        ds_config = get_eval_ds_config(offload=self.args.offload,
-                                       stage=zero_stage)
-        ds_config[
-            'train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
-        ds_config[
-            'train_batch_size'] = self.args.per_device_mini_train_batch_size * torch.distributed.get_world_size(
-        ) * self.args.gradient_accumulation_steps
+        ds_config = get_eval_ds_config(offload=self.args.offload, stage=zero_stage)
+        ds_config['train_micro_batch_size_per_gpu'] = self.args.per_device_mini_train_batch_size
+        ds_config['train_batch_size'] = self.args.per_device_mini_train_batch_size * \
+            torch.distributed.get_world_size() * self.args.gradient_accumulation_steps
 
         # TODO(jeff): should not be needed, we should be able to use ds_config above
         # TODO(jeff): it means we never create the critic w. zero.init context if we are using ZeRO-3
