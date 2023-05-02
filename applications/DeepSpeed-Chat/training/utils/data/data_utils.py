@@ -107,6 +107,8 @@ def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
                     shuffle_idx_split,
                     allow_pickle=True)
     index = np.load(index_file_name, allow_pickle=True)
+    print('【data_utils/get_raw_dataset_split_index')
+    print('index_file_name:{}'.format(index_file_name))
     return index.tolist()
 
 
