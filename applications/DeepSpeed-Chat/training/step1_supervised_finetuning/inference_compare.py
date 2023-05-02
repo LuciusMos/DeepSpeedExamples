@@ -158,8 +158,10 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
     f = open('phd_bloomz_compare.json', 'w')
     for prompt in prompts:
         if with_gt:
-            complete_propt = prompt
+            complete_prompt = prompt
             prompt = prompt['prompt']
+        print("==========   prompt  =========")
+        print(prompt)
         inputs = tokenizer(prompt, return_tensors="pt").to(device)
         print("==========SFT: Greedy=========")
         r_base = generate(model_sft,
@@ -222,7 +224,7 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
             'final': r_final_g,
         }
         if with_gt:
-            json_string['chatgpt'] = complete_propt['chosen']
+            json_string['chatgpt'] = complete_prompt['chosen']
         f.write(json.dumps(json_string, ensure_ascii=False, indent=4) + '\n')
 
     f.close()

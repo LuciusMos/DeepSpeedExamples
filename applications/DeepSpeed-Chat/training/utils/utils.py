@@ -6,7 +6,8 @@ import os
 import torch
 import random
 import numpy as np
-from transformers import set_seed
+from transformers import set_seed, AutoTokenizer
+import json
 import deepspeed
 from deepspeed.runtime.zero.partition_parameters import ZeroParamStatus
 
@@ -39,6 +40,19 @@ class MovingAverage:
         self.mean = self.total / self.count
 
         return self.mean
+
+
+def load_hf_tokenizer(model_name_or_path, fast_tokenizer=True, padding_side="right"):
+    if os.path.exists(model_name_or_path):
+        # Locally tokenizer loading has some issue, so we need to force download
+        model_json = os.path.join(model_name_or_path, "config.json")
+        if os.path.exists(model_json):
+            model_json_file = json.load(open(model_json))
+            model_name = model_json_file["_name_or_path"]
+            tokenizer = AutoTokenizer.from_pretrained(model_name, fast_tokenizer=True, padding_side=padding_side)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, fast_tokenizer=True, padding_side=padding_side)
+    return tokenizer
 
 
 def save_hf_format(model, tokenizer, args, sub_folder=""):

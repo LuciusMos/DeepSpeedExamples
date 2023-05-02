@@ -25,7 +25,6 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader, RandomSampler
 
 from transformers import (
-    AutoTokenizer,
     SchedulerType,
     default_data_collator,
 )
@@ -37,7 +36,7 @@ from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from utils.module.lora import convert_lora_to_linear_layer  # noqa
-from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model  # noqa
+from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model, load_hf_tokenizer  # noqa
 from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data  # noqa
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -56,7 +55,7 @@ def parse_args():
     parser.add_argument(
         '--data_split',
         type=str,
-        default='6,2,2',
+        default='2,4,4',
         help='Comma-separated list of proportions for training phase 1, 2, and 3 data. For example the split `2,4,4` '
         'will use 60% of data for phase 1, 20% for phase 2 and 20% for phase 3.'
     )
@@ -358,7 +357,7 @@ def main():
     torch.distributed.barrier()
 
     # create common tokenizer based on actor model, step3 generating answer should use left-padding
-    tokenizer = AutoTokenizer.from_pretrained(args.actor_model_name_or_path, fast_tokenizer=True, padding_side="left")
+    tokenizer = load_hf_tokenizer(args.actor_model_name_or_path, fast_tokenizer=True, padding_side="left")
     tokenizer.pad_token = tokenizer.eos_token
 
     # create dataloaders (prompt + unsupervised)
@@ -403,16 +402,14 @@ def main():
                 unsup_dataset = unsup_mini_dataset.add(batch_unsupervised)
             else:
                 unsup_dataset = unsup_mini_dataset.add([[None] * args.per_device_train_batch_size])
-            prompts = batch_prompt['prompt']
-            length = prompts.size(-1)
-            if length > args.max_prompt_seq_len:
-                prompts = prompts[:, length - args.max_prompt_seq_len:]
-                raise ValueError("Prompt length is too long")
+            # prompts = batch_prompt['prompt']
+            # length = prompts.size(-1)
+            # if length > args.max_prompt_seq_len:
+            #     prompts = prompts[:, length - args.max_prompt_seq_len:]
+            #     raise ValueError("Prompt length is too long")
 
-            # out is a dict with keys: 'prompts', 'logprobs', 'ref_logprobs',
-            #                          'value', 'rewards', 'input_ids', "attention_mask"
-            out = trainer.generate_experience(prompts)
-            exp_dataset = exp_mini_dataset.add(out)  # add + seperate + clear
+            out = trainer.generate_experience(batch_prompt['prompt'], batch_prompt['prompt_att_mask'])
+            exp_dataset = exp_mini_dataset.add(out)
 
             if exp_dataset is not None:
                 inner_iter = 0
