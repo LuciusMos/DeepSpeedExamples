@@ -55,8 +55,7 @@ class DeepSpeedRLHFEngine():
         self.ref = self._init_ref(actor_model_name_or_path=actor_model_name_or_path)
         self.actor_ema = None
         if self.args.enable_ema:
-            self.actor_ema = self._init_ema(
-                actor_model_name_or_path=actor_model_name_or_path)
+            self.actor_ema = self._init_ema(actor_model_name_or_path=actor_model_name_or_path)
 
         self.critic = self._init_critic(critic_model_name_or_path=critic_model_name_or_path)
         self.reward = self._init_reward(critic_model_name_or_path=critic_model_name_or_path)

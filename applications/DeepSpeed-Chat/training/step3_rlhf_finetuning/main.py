@@ -36,7 +36,7 @@ from rlhf_engine import DeepSpeedRLHFEngine
 from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from utils.module.lora import convert_lora_to_linear_layer  # noqa
+from utils.module.lora import convert_lora_to_linear_layer, convert_linear_layer_to_lora  # noqa
 from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model, load_hf_tokenizer  # noqa
 from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data  # noqa
 
@@ -388,8 +388,52 @@ def main():
     unsup_mini_dataset = MiniDataset(args.generation_batch_numbers,
                                      args.per_device_mini_train_batch_size)
 
+    def save_model(epoch, iter):
+        print_rank_0('saving model ... epoch:{}, iter:{}'.format(epoch, iter))
+        rlhf_engine.actor = convert_lora_to_linear_layer(rlhf_engine.actor)
+        rlhf_engine.critic = convert_lora_to_linear_layer(rlhf_engine.critic)
+        if args.enable_ema:
+            rlhf_engine.actor_ema = convert_lora_to_linear_layer(rlhf_engine.actor_ema)
+
+        if torch.distributed.get_rank() == 0:
+            save_hf_format(rlhf_engine.actor,
+                           tokenizer,
+                           args,
+                           sub_folder='actor-e{}-i{}'.format(epoch, iter))
+            save_hf_format(rlhf_engine.critic,
+                           tokenizer,
+                           args,
+                           sub_folder='critic-e{}-i{}'.format(epoch, iter))
+            if args.enable_ema:
+                save_hf_format(rlhf_engine.actor_ema,
+                               tokenizer,
+                               args,
+                               sub_folder='actor_ema-e{}-i{}'.format(epoch, iter))
+
+        if args.actor_zero_stage == 3:
+            save_zero_three_model(rlhf_engine.actor,
+                                  global_rank=args.global_rank,
+                                  save_dir=os.path.join(args.output_dir, 'actor-e{}-i{}'.format(epoch, iter)),
+                                  zero_stage=args.actor_zero_stage)
+            if args.enable_ema:
+                save_zero_three_model(rlhf_engine.actor_ema,
+                                      global_rank=args.global_rank,
+                                      save_dir=os.path.join(args.output_dir, 'actor_ema-e{}-i{}'.format(epoch, iter)),
+                                      zero_stage=args.actor_zero_stage)
+        if args.critic_zero_stage == 3:
+            save_zero_three_model(rlhf_engine.critic,
+                                  global_rank=args.global_rank,
+                                  save_dir=os.path.join(args.output_dir, 'critic-e{}-i{}'.format(epoch, iter)),
+                                  zero_stage=args.critic_zero_stage)
+
+        rlhf_engine.actor = convert_linear_layer_to_lora(rlhf_engine.actor)
+        rlhf_engine.critic = convert_linear_layer_to_lora(rlhf_engine.critic)
+        if args.enable_ema:
+            rlhf_engine.actor_ema = convert_linear_layer_to_lora(rlhf_engine.actor_ema)
+
     # Train!
     print_rank_0("***** Running training *****", args.global_rank)
+    save_model_iter_list = [0, 1, 2, 5, 10, 20, 50, 100, 200, 300]
 
     for epoch in range(args.num_train_epochs):
         print_rank_0(
@@ -452,46 +496,11 @@ def main():
             if args.actor_gradient_checkpointing:
                 rlhf_engine.actor.gradient_checkpointing_disable()
 
+            if step in save_model_iter_list and args.output_dir is not None:
+                save_model(epoch, step)
+
     if args.output_dir is not None:
-        print_rank_0('saving model ...')
-        rlhf_engine.actor = convert_lora_to_linear_layer(rlhf_engine.actor)
-        rlhf_engine.critic = convert_lora_to_linear_layer(rlhf_engine.critic)
-        if args.enable_ema:
-            rlhf_engine.actor_ema = convert_lora_to_linear_layer(rlhf_engine.actor_ema)
-
-        if torch.distributed.get_rank() == 0:
-            save_hf_format(rlhf_engine.actor,
-                           tokenizer,
-                           args,
-                           sub_folder='actor')
-            save_hf_format(rlhf_engine.critic,
-                           tokenizer,
-                           args,
-                           sub_folder='critic')
-            if args.enable_ema:
-                save_hf_format(rlhf_engine.actor_ema,
-                               tokenizer,
-                               args,
-                               sub_folder='actor_ema')
-
-        if args.actor_zero_stage == 3:
-            save_zero_three_model(rlhf_engine.actor,
-                                  global_rank=args.global_rank,
-                                  save_dir=os.path.join(
-                                      args.output_dir, 'actor'),
-                                  zero_stage=args.actor_zero_stage)
-            if args.enable_ema:
-                save_zero_three_model(rlhf_engine.actor_ema,
-                                      global_rank=args.global_rank,
-                                      save_dir=os.path.join(
-                                          args.output_dir, 'actor_ema'),
-                                      zero_stage=args.actor_zero_stage)
-        if args.critic_zero_stage == 3:
-            save_zero_three_model(rlhf_engine.critic,
-                                  global_rank=args.global_rank,
-                                  save_dir=os.path.join(
-                                      args.output_dir, 'critic'),
-                                  zero_stage=args.critic_zero_stage)
+        save_model('N', 'N')
 
 
 if __name__ == "__main__":
