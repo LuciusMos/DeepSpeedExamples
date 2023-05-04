@@ -28,7 +28,7 @@ def get_raw_dataset(dataset_name, output_path, seed, local_rank):
     elif "phd_qualified_seeds" in dataset_name:
         return raw_datasets.PhdQualifiedSeedsDataset(output_path, seed, local_rank)
     elif "keyword" in dataset_name:
-        return raw_datasets.keywordDataset(output_path, seed, local_rank)
+        return raw_datasets.KeywordDataset(output_path, seed, local_rank)
     elif "Dahoas/synthetic-instruct-gptj-pairwise" in dataset_name:
         return raw_datasets.DahoasSyntheticinstructgptjpairwiseDataset(
             output_path, seed, local_rank, dataset_name)
@@ -86,7 +86,8 @@ def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
                                 data_size):
     index_file_name = f"{output_path}/{dataset_name}_seed{seed}_{split_name}_{data_split}_{split_index}.npy"
     # /tmp/data_files/phd_qualified_seeds_seed1234_train_2,4,4_1.npy
-    if not os.path.isfile(index_file_name):
+    should_prepare = not os.path.isfile(index_file_name)
+    if should_prepare:
         splits = [float(s) for s in data_split.split(',')]
         splits_sum = sum(splits)
         splits = [split / splits_sum for split in splits]
@@ -107,7 +108,7 @@ def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
                     shuffle_idx_split,
                     allow_pickle=True)
     index = np.load(index_file_name, allow_pickle=True)
-    print('【data_utils/get_raw_dataset_split_index')
+    print('【data_utils/get_raw_dataset_split_index, should_prepare:{}'.format(should_prepare))
     print('index_file_name:{}'.format(index_file_name))
     return index.tolist()
 

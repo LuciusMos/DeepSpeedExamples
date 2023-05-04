@@ -170,6 +170,8 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
                           num_beams=1,
                           num_return_sequences=args.num_return_sequences,
                           max_new_tokens=args.max_new_tokens)
+        # PhD spcified
+        r_base = r_base.split('<ANSWER>')[1]
         print_utils(r_base)
         print("==========final: Greedy=========")
         r_final_g = generate(model_final,
@@ -178,6 +180,7 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
                              num_beams=1,
                              num_return_sequences=args.num_return_sequences,
                              max_new_tokens=args.max_new_tokens)
+        r_final_g = r_final_g.split('<ANSWER>')[1]
         print_utils(r_final_g)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
@@ -289,7 +292,7 @@ def main():
         ]
     elif args.language == "phd":
         prompts = []
-        with open('/share/zhaoliangxuan/dataset/phd_qualified_seeds_inference_output_all.csv', 'r') as f:
+        with open('/share/zhaoliangxuan/dataset/phd_qualified_seeds_clean.csv', 'r') as f:
             for i, line in enumerate(f):
                 pid, text = line.strip().split('\t')
                 query, answers = text.strip().split('<ANSWER>')

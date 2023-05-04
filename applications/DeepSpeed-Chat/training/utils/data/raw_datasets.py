@@ -118,7 +118,7 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
         self.dataset_name = "phd_qualified_seeds"
         self.dataset_name_clean = "phd_qualified_seeds"
         self.raw_datasets = []
-        with open('/home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/dataset/phd_qualified_seeds_inference_output_all.csv', 'r') as f:
+        with open('/share/zhaoliangxuan/dataset/phd_qualified_seeds_clean.csv', 'r') as f:
             for line in f:
                 pid, text = line.strip().split('\t')
                 query, answers = text.strip().split('<ANSWER>')
@@ -156,7 +156,7 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
 
 
 # Chineses dataset(keyword); SFT
-class keywordDataset(PromptRawDataset):
+class KeywordDataset(PromptRawDataset):
 
     def __init__(self, output_path, seed, local_rank):
         # keys: photo_id, industry, prompt, answer
