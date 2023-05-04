@@ -426,10 +426,10 @@ def main():
                                   save_dir=os.path.join(args.output_dir, 'critic-e{}-i{}'.format(epoch, iter)),
                                   zero_stage=args.critic_zero_stage)
 
-        rlhf_engine.actor = convert_linear_layer_to_lora(rlhf_engine.actor)
-        rlhf_engine.critic = convert_linear_layer_to_lora(rlhf_engine.critic)
+        rlhf_engine.actor = convert_linear_layer_to_lora(rlhf_engine.actor, args.actor_lora_dim)
+        rlhf_engine.critic = convert_linear_layer_to_lora(rlhf_engine.critic, args.critic_lora_dim)
         if args.enable_ema:
-            rlhf_engine.actor_ema = convert_linear_layer_to_lora(rlhf_engine.actor_ema)
+            rlhf_engine.actor_ema = convert_linear_layer_to_lora(rlhf_engine.actor_ema, args.actor_lora_dim)
 
     # Train!
     print_rank_0("***** Running training *****", args.global_rank)

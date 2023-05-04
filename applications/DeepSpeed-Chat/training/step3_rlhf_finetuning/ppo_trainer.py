@@ -113,8 +113,7 @@ class DeepSpeedPPOTrainer():
         return {
             'prompts': prompts,
             'logprobs': gather_log_probs(logits[:, :-1, :], seq[:, 1:]),
-            'ref_logprobs': gather_log_probs(logits_ref[:, :-1, :], seq[:,
-                                                                        1:]),
+            'ref_logprobs': gather_log_probs(logits_ref[:, :-1, :], seq[:, 1:]),
             'value': values,
             'rewards': reward_score,
             'input_ids': seq,
@@ -170,8 +169,7 @@ class DeepSpeedPPOTrainer():
         value = self.critic_model.forward_value(**batch,
                                                 return_value_only=True,
                                                 use_cache=False)[:, :-1]
-        critic_loss = self.critic_loss_fn(value[:, start:], old_values[:,
-                                                                       start:],
+        critic_loss = self.critic_loss_fn(value[:, start:], old_values[:, start:],
                                           returns, action_mask[:, start:])
         self.critic_model.backward(critic_loss)
         self.critic_model.step()
