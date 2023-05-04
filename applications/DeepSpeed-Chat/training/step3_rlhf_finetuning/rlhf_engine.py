@@ -96,8 +96,7 @@ class DeepSpeedRLHFEngine():
         # LoRA
         if self.args.actor_lora_dim > 0:
             actor_model = convert_linear_layer_to_lora(
-                actor_model, self.args.actor_lora_module_name,
-                self.args.actor_lora_dim)
+                actor_model, self.args.actor_lora_module_name, self.args.actor_lora_dim)
             if self.args.only_optimize_lora:
                 actor_model = only_optimize_lora_parameters(actor_model)
 
@@ -169,8 +168,7 @@ class DeepSpeedRLHFEngine():
                                           self.tokenizer, ds_config)
         if self.args.actor_lora_dim > 0:
             actor_model_ema = convert_linear_layer_to_lora(
-                actor_model_ema, self.args.actor_lora_module_name,
-                self.args.actor_lora_dim)
+                actor_model_ema, self.args.actor_lora_module_name, self.args.actor_lora_dim)
 
         ema_engine, *_ = deepspeed.initialize(model=actor_model_ema,
                                               config=ds_config)
@@ -206,8 +204,7 @@ class DeepSpeedRLHFEngine():
         # LoRA
         if self.args.critic_lora_dim > 0:
             critic_model = convert_linear_layer_to_lora(
-                critic_model, self.args.critic_lora_module_name,
-                self.args.critic_lora_dim)
+                critic_model, self.args.critic_lora_module_name, self.args.critic_lora_dim)
             if self.args.only_optimize_lora:
                 critic_model = only_optimize_lora_parameters(critic_model)
 

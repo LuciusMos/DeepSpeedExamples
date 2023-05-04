@@ -36,7 +36,7 @@ from rlhf_engine import DeepSpeedRLHFEngine
 from ppo_trainer import DeepSpeedPPOTrainer, DeepSpeedPPOTrainerUnsupervised
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from utils.module.lora import convert_lora_to_linear_layer, convert_linear_layer_to_lora  # noqa
+from utils.module.lora import convert_lora_to_linear_layer, convert_linear_layer_to_lora, only_optimize_lora_parameters  # noqa
 from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, moving_average, save_zero_three_model, load_hf_tokenizer  # noqa
 from utils.data.data_utils import create_prompt_dataset, MiniDataset, DataCollatorRLHF, get_unsupervised_data  # noqa
 
@@ -426,10 +426,20 @@ def main():
                                   save_dir=os.path.join(args.output_dir, 'critic-e{}-i{}'.format(epoch, iter)),
                                   zero_stage=args.critic_zero_stage)
 
-        rlhf_engine.actor = convert_linear_layer_to_lora(rlhf_engine.actor, args.actor_lora_dim)
-        rlhf_engine.critic = convert_linear_layer_to_lora(rlhf_engine.critic, args.critic_lora_dim)
-        if args.enable_ema:
-            rlhf_engine.actor_ema = convert_linear_layer_to_lora(rlhf_engine.actor_ema, args.actor_lora_dim)
+        # LoRA, convert back to lora
+        if args.actor_lora_dim > 0:
+            rlhf_engine.actor = convert_linear_layer_to_lora(
+                rlhf_engine.actor, args.actor_lora_module_name, args.actor_lora_dim)
+            if args.only_optimize_lora:
+                rlhf_engine.actor = only_optimize_lora_parameters(rlhf_engine.actor)
+            if args.enable_ema:
+                rlhf_engine.actor_ema = convert_linear_layer_to_lora(
+                    rlhf_engine.actor_ema, args.actor_lora_module_name, args.actor_lora_dim)
+        if args.critic_lora_dim > 0:
+            rlhf_engine.critic = convert_linear_layer_to_lora(
+                rlhf_engine.critic, args.critic_lora_module_name, args.critic_lora_dim)
+            if args.only_optimize_lora:
+                rlhf_engine.critic = only_optimize_lora_parameters(rlhf_engine.critic)
 
     # Train!
     print_rank_0("***** Running training *****", args.global_rank)
