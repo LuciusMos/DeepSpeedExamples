@@ -45,8 +45,8 @@ def parse_args():
     parser.add_argument(
         "--model_name_or_path_sft",
         type=str,
+        default=None,
         help="Path to sft model",
-        required=True,
     )
     parser.add_argument(
         "--model_name_or_path_final",
@@ -128,6 +128,9 @@ def generate(model,
              num_return_sequences=1,
              max_new_tokens=100):
 
+    if model is None:
+        return [None]
+
     generate_ids = model.generate(inputs.input_ids,
                                   num_beams=num_beams,
                                   num_beam_groups=num_beam_groups,
@@ -148,6 +151,9 @@ def generate_constrastive_search(model,
                                  penalty_alpha=0.6,
                                  num_return_sequences=1,
                                  max_new_tokens=100):
+
+    if model is None:
+        return [None]
 
     generate_ids = model.generate(inputs.input_ids,
                                   top_k=top_k,
@@ -197,17 +203,16 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
         # PhD spcified
         r_final_g = r_final_g.split('<ANSWER>')[1]
         print_utils(r_final_g)
-        if model_final_ema is not None:
-            print("========final-EMA: Greedy========")
-            r_final_ema_g = generate(model_final_ema,
-                                     tokenizer,
-                                     inputs,
-                                     num_beams=1,
-                                     num_return_sequences=args.num_return_sequences,
-                                     max_new_tokens=args.max_new_tokens)[0]
-            # PhD spcified
-            r_final_ema_g = r_final_ema_g.split('<ANSWER>')[1]
-            print_utils(r_final_ema_g)
+        print("========final-EMA: Greedy========")
+        r_final_ema_g = generate(model_final_ema,
+                                 tokenizer,
+                                 inputs,
+                                 num_beams=1,
+                                 num_return_sequences=args.num_return_sequences,
+                                 max_new_tokens=args.max_new_tokens)[0]
+        # PhD spcified
+        r_final_ema_g = r_final_ema_g.split('<ANSWER>')[1]
+        print_utils(r_final_ema_g)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
         # We provide examples as below for users to try.
@@ -252,9 +257,8 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
             'prompt': prompt,
             'sft': r_base,
             'final': r_final_g,
+            'final_ema': r_final_ema_g,
         }
-        if model_final_ema is not None:
-            json_string['final_ema']: r_final_ema_g
         if with_gt:
             json_string['chatgpt'] = complete_prompt['chosen']
         f.write(json.dumps(json_string, ensure_ascii=False, indent=4) + '\n')
@@ -275,10 +279,12 @@ def main():
     #                             tokenizer,
     #                             None,
     #                             model_cache=args.model_baseline_cache)
-    model_sft = create_hf_model(AutoModelForCausalLM,
-                                args.model_name_or_path_sft,
-                                tokenizer,
-                                None)
+    model_sft = None
+    if args.model_name_or_path_sft is not None:
+        model_sft = create_hf_model(AutoModelForCausalLM,
+                                    args.model_name_or_path_sft,
+                                    tokenizer,
+                                    None)
     model_final = create_hf_model(AutoModelForCausalLM,
                                   args.model_name_or_path_final,
                                   tokenizer,
@@ -289,7 +295,8 @@ def main():
                                           args.model_name_or_path_final_ema,
                                           tokenizer,
                                           None)
-    model_sft.to(device)
+    if model_sft is not None:
+        model_sft.to(device)
     model_final.to(device)
     if model_final_ema is not None:
         model_final_ema.to(device)
