@@ -168,13 +168,25 @@ def generate_constrastive_search(model,
 
 
 def print_utils(gen_output):
-    for i in range(len(gen_output)):
+    if isinstance(gen_output, list):
+        for i in range(len(gen_output)):
+            print()
+            print(gen_output[i])
+            print()
+    else:
         print()
-        print(gen_output[i])
+        print(gen_output)
         print()
 
 
 def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device, prompts, with_gt=False):
+
+    def phd_specified_post_process(infer_string):
+        if infer_string is None:
+            return None
+        else:
+            return infer_string.split('<ANSWER>')[1]
+
     f = open(args.output_file, 'w')
     for p_index, prompt in enumerate(prompts):
         if with_gt:
@@ -190,8 +202,7 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
                           num_beams=1,
                           num_return_sequences=args.num_return_sequences,
                           max_new_tokens=args.max_new_tokens)[0]
-        # PhD spcified
-        r_base = r_base.split('<ANSWER>')[1]
+        r_base = phd_specified_post_process(r_base)
         print_utils(r_base)
         print("==========final: Greedy=========")
         r_final_g = generate(model_final,
@@ -200,8 +211,7 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
                              num_beams=1,
                              num_return_sequences=args.num_return_sequences,
                              max_new_tokens=args.max_new_tokens)[0]
-        # PhD spcified
-        r_final_g = r_final_g.split('<ANSWER>')[1]
+        r_final_g = phd_specified_post_process(r_final_g)
         print_utils(r_final_g)
         print("========final-EMA: Greedy========")
         r_final_ema_g = generate(model_final_ema,
@@ -210,8 +220,7 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
                                  num_beams=1,
                                  num_return_sequences=args.num_return_sequences,
                                  max_new_tokens=args.max_new_tokens)[0]
-        # PhD spcified
-        r_final_ema_g = r_final_ema_g.split('<ANSWER>')[1]
+        r_final_ema_g = phd_specified_post_process(r_final_ema_g)
         print_utils(r_final_ema_g)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
