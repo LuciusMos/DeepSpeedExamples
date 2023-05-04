@@ -51,8 +51,8 @@ def parse_args():
     parser.add_argument(
         "--model_name_or_path_final",
         type=str,
+        default=None,
         help="Path to final model after 3 steps",
-        required=True,
     )
     parser.add_argument(
         "--model_name_or_path_final_ema",
@@ -289,27 +289,27 @@ def main():
     #                             None,
     #                             model_cache=args.model_baseline_cache)
     model_sft = None
+    model_final = None
+    model_final_ema = None
+
     if args.model_name_or_path_sft is not None:
         model_sft = create_hf_model(AutoModelForCausalLM,
                                     args.model_name_or_path_sft,
                                     tokenizer,
                                     None)
-    model_final = create_hf_model(AutoModelForCausalLM,
-                                  args.model_name_or_path_final,
-                                  tokenizer,
-                                  None)
-    model_final_ema = None
+        model_sft.to(device)
+    if args.model_name_or_path_final is not None:
+        model_final = create_hf_model(AutoModelForCausalLM,
+                                      args.model_name_or_path_final,
+                                      tokenizer,
+                                      None)
+        model_final.to(device)
     if args.model_name_or_path_final_ema is not None:
         model_final_ema = create_hf_model(AutoModelForCausalLM,
                                           args.model_name_or_path_final_ema,
                                           tokenizer,
                                           None)
-    if model_sft is not None:
-        model_sft.to(device)
-    model_final.to(device)
-    if model_final_ema is not None:
         model_final_ema.to(device)
-
     # One observation: if the prompt ends with a space " ", there is a high chance that
     # the original model (without finetuning) will stuck and produce no response.
     # finald models have less such issue. Thus following prompts all end with ":"
@@ -371,7 +371,7 @@ def main():
         tokenizer=tokenizer,
         device=device,
         prompts=prompts,
-        with_gt=(args.language == "phd")
+        with_gt=args.language == "phd",
     )
 
 
