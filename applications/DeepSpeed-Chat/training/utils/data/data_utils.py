@@ -83,10 +83,12 @@ def get_shuffle_idx(seed, size):
 
 def get_raw_dataset_split_index(local_rank, output_path, dataset_name, seed,
                                 split_name, data_split, split_index,
-                                data_size):
+                                data_size, force_prepare=False):
     index_file_name = f"{output_path}/{dataset_name}_seed{seed}_{split_name}_{data_split}_{split_index}.npy"
     # /tmp/data_files/phd_qualified_seeds_seed1234_train_2,4,4_1.npy
     should_prepare = not os.path.isfile(index_file_name)
+    if force_prepare:
+        should_prepare = True
     if should_prepare:
         splits = [float(s) for s in data_split.split(',')]
         splits_sum = sum(splits)
@@ -212,14 +214,15 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
 
 def create_dataset(local_rank, dataset_name, data_split, output_path,
                    train_phase, seed, tokenizer, end_of_conversation_token,
-                   max_seq_len):
+                   max_seq_len, force_prepare=False):
     raw_dataset = get_raw_dataset(dataset_name, output_path, seed, local_rank)
     train_dataset = raw_dataset.get_train_data()
     train_index = get_raw_dataset_split_index(local_rank, output_path,
                                               raw_dataset.dataset_name_clean,
                                               seed, "train", data_split,
                                               train_phase - 1,
-                                              len(train_dataset))
+                                              len(train_dataset),
+                                              force_prepare=force_prepare)
     train_dataset = Subset(train_dataset, train_index)
     train_dataset = create_dataset_split(train_dataset, raw_dataset,
                                          train_phase, tokenizer,
@@ -231,7 +234,8 @@ def create_dataset(local_rank, dataset_name, data_split, output_path,
                                              raw_dataset.dataset_name_clean,
                                              seed, "eval",
                                              data_split, train_phase - 1,
-                                             len(eval_dataset))
+                                             len(eval_dataset),
+                                             force_prepare=force_prepare)
     eval_dataset = Subset(eval_dataset, eval_index)
     eval_dataset = create_dataset_split(eval_dataset, raw_dataset, train_phase,
                                         tokenizer, end_of_conversation_token,
@@ -279,7 +283,7 @@ def create_prompt_dataset(local_rank,
         if len(data_path) == 1:  # Single dataset.
             train_dataset, eval_dataset = create_dataset(
                 local_rank, data_path[0], data_split, output_path, train_phase,
-                seed, tokenizer, end_of_conversation_token, max_seq_len)
+                seed, tokenizer, end_of_conversation_token, max_seq_len, force_prepare=force_prepare)
         else:  # Blending datasets.
             train_datasets = []
             eval_datasets = []
@@ -288,7 +292,7 @@ def create_prompt_dataset(local_rank,
             for d_path in data_path:
                 train_dataset, eval_dataset = create_dataset(
                     local_rank, d_path, data_split, output_path, train_phase,
-                    seed, tokenizer, end_of_conversation_token, max_seq_len)
+                    seed, tokenizer, end_of_conversation_token, max_seq_len, force_prepare=force_prepare)
                 train_datasets.append(train_dataset)
                 eval_datasets.append(eval_dataset)
                 train_size += len(train_dataset)
