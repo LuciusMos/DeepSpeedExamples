@@ -268,7 +268,7 @@ def main():
 
     device = torch.device("cuda:0")
     # step 1 & 2 use right-padding, step 3 uses left-padding
-    tokenizer = load_hf_tokenizer(args.model_name_or_path_baseline, fast_tokenizer=True, padding_side="left")
+    tokenizer = load_hf_tokenizer(args.model_name_or_path_final, fast_tokenizer=True, padding_side="left")
 
     # model_baseline = create_hf_model(AutoModelForCausalLM,
     #                             args.model_name_or_path_baseline,
