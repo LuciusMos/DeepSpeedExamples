@@ -7,8 +7,10 @@
 # You can provide two models to compare the performance of the sft and the final model
 export CUDA_VISIBLE_DEVICES=0
 python inference_compare.py \
-    --model_name_or_path_sft /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/bloomz-560m-523-a100/actor-models/bloomz-7b1 \
-    --model_name_or_path_final /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/bloomz-560m-523-a100/step3-models/bloomz-7b1/actor \
+    --output_file old-leftpad-phd-compare.json \
+    --model_name_or_path_sft /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/old-exps/bloomz-560m-523-leftpad/actor-models/bloomz-7b1/ \
+    --model_name_or_path_final /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/old-exps/bloomz-560m-523-leftpad/step3-models/bloomz-7b1/actor/ \
+    --model_name_or_path_final_ema /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/old-exps/bloomz-560m-523-leftpad/step3-models/bloomz-7b1/actor_ema/ \
     --language phd \
     --max_new_tokens 900 \
-    --test
+    --test_sample_num 30

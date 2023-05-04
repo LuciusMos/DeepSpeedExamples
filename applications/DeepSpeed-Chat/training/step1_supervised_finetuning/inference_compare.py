@@ -9,17 +9,23 @@ import sys
 import os
 import json
 
-from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from utils.model.model_utils import create_hf_model  # noqa
-from utils.utils import set_random_seed  # noqa
+from utils.utils import set_random_seed, load_hf_tokenizer  # noqa
 
 logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Inference with the finetued SFT model")
+    parser = argparse.ArgumentParser(description="Inference with the trained models")
+    parser.add_argument(
+        "--output_file",
+        type=str,
+        help="File to output the inference results",
+        required=True,
+    )
     # parser.add_argument(
     #     "--model_name_or_path_baseline",
     #     type=str,
@@ -40,12 +46,19 @@ def parse_args():
         "--model_name_or_path_sft",
         type=str,
         help="Path to sft model",
+        required=True,
     )
     parser.add_argument(
         "--model_name_or_path_final",
         type=str,
         help="Path to final model after 3 steps",
         required=True,
+    )
+    parser.add_argument(
+        "--model_name_or_path_final_ema",
+        type=str,
+        default=None,
+        help="Path to final EMA model after 3 steps",
     )
     parser.add_argument(
         "--num_beams",
@@ -90,9 +103,10 @@ def parse_args():
         choices=["English", "Chinese", "Japanese", "phd", "keyword"],
     )
     parser.add_argument(
-        "--test",
-        action='store_true',
-        help='test mode will only use 10 prompts',
+        "--test_sample_num",
+        type=int,
+        default=30,
+        help='How many samples will be used for testing. [-1 means ALL samples]',
     )
     parser.add_argument(
         "--seed",
@@ -154,9 +168,9 @@ def print_utils(gen_output):
         print()
 
 
-def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_gt=False):
-    f = open('phd_bloomz_compare.json', 'w')
-    for prompt in prompts:
+def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device, prompts, with_gt=False):
+    f = open(args.output_file, 'w')
+    for p_index, prompt in enumerate(prompts):
         if with_gt:
             complete_prompt = prompt
             prompt = prompt['prompt']
@@ -169,7 +183,7 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
                           inputs,
                           num_beams=1,
                           num_return_sequences=args.num_return_sequences,
-                          max_new_tokens=args.max_new_tokens)
+                          max_new_tokens=args.max_new_tokens)[0]
         # PhD spcified
         r_base = r_base.split('<ANSWER>')[1]
         print_utils(r_base)
@@ -179,9 +193,21 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
                              inputs,
                              num_beams=1,
                              num_return_sequences=args.num_return_sequences,
-                             max_new_tokens=args.max_new_tokens)
+                             max_new_tokens=args.max_new_tokens)[0]
+        # PhD spcified
         r_final_g = r_final_g.split('<ANSWER>')[1]
         print_utils(r_final_g)
+        if model_final_ema is not None:
+            print("========final-EMA: Greedy========")
+            r_final_ema_g = generate(model_final_ema,
+                                     tokenizer,
+                                     inputs,
+                                     num_beams=1,
+                                     num_return_sequences=args.num_return_sequences,
+                                     max_new_tokens=args.max_new_tokens)[0]
+            # PhD spcified
+            r_final_ema_g = r_final_ema_g.split('<ANSWER>')[1]
+            print_utils(r_final_ema_g)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
         # We provide examples as below for users to try.
@@ -222,10 +248,13 @@ def prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_g
         # print_utils(r_final_c)
         print("====================prompt end=============================")
         json_string = {
+            'index': p_index,
             'prompt': prompt,
             'sft': r_base,
             'final': r_final_g,
         }
+        if model_final_ema is not None:
+            json_string['final_ema']: r_final_ema_g
         if with_gt:
             json_string['chatgpt'] = complete_prompt['chosen']
         f.write(json.dumps(json_string, ensure_ascii=False, indent=4) + '\n')
@@ -238,11 +267,8 @@ def main():
     set_random_seed(args.seed)
 
     device = torch.device("cuda:0")
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.model_name_or_path_final,
-        fast_tokenizer=True,
-        # step 1 & 2 use right-padding, step 3 uses left-padding
-        padding_side="right")
+    # step 1 & 2 use right-padding, step 3 uses left-padding
+    tokenizer = load_hf_tokenizer(args.model_name_or_path_baseline, fast_tokenizer=True, padding_side="left")
 
     # model_baseline = create_hf_model(AutoModelForCausalLM,
     #                             args.model_name_or_path_baseline,
@@ -257,8 +283,16 @@ def main():
                                   args.model_name_or_path_final,
                                   tokenizer,
                                   None)
+    model_final_ema = None
+    if args.model_name_or_path_final_ema is not None:
+        model_final_ema = create_hf_model(AutoModelForCausalLM,
+                                          args.model_name_or_path_final_ema,
+                                          tokenizer,
+                                          None)
     model_sft.to(device)
     model_final.to(device)
+    if model_final_ema is not None:
+        model_final_ema.to(device)
 
     # One observation: if the prompt ends with a space " ", there is a high chance that
     # the original model (without finetuning) will stuck and produce no response.
@@ -302,18 +336,27 @@ def main():
                     'chosen': chatgpt_answer,
                     'rejected': ours_answer,
                 })
-                if i == 9 and args.test:
+                if i == args.test_sample_num:
                     break
     elif args.language == "keyword":
         prompts = []
         with open('/share/zhaoliangxuan/dataset/keyword.json', 'r') as f:
             for i, line in enumerate(f.readlines()):
                 prompts.append(json.loads(line))
-                if i == 9 and args.test:
+                if i == args.test_sample_num:
                     break
         prompts = [p['prompt'] for p in prompts]
 
-    prompt_eval(args, model_sft, model_final, tokenizer, device, prompts, with_gt=(args.language == "phd"))
+    prompt_eval(
+        args=args,
+        model_sft=model_sft,
+        model_final=model_final,
+        model_final_ema=model_final_ema,
+        tokenizer=tokenizer,
+        device=device,
+        prompts=prompts,
+        with_gt=(args.language == "phd")
+    )
 
 
 if __name__ == "__main__":
