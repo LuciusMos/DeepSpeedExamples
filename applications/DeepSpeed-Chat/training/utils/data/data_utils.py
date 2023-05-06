@@ -29,6 +29,9 @@ def get_raw_dataset(dataset_name, output_path, seed, local_rank):
         return raw_datasets.PhdQualifiedSeedsDataset(output_path, seed, local_rank)
     elif "keyword" in dataset_name:
         return raw_datasets.KeywordDataset(output_path, seed, local_rank)
+    elif "Goliath-Stage1" in dataset_name:
+        # Because there are many Goliath-Stage1 datasets
+        return raw_datasets.GoliathDataset(output_path, seed, local_rank, dataset_name)
     elif "Dahoas/synthetic-instruct-gptj-pairwise" in dataset_name:
         return raw_datasets.DahoasSyntheticinstructgptjpairwiseDataset(
             output_path, seed, local_rank, dataset_name)
