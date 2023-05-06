@@ -213,7 +213,7 @@ class GoliathDataset(PromptRawDataset):
         self.dataset_name = dataset_name
         self.dataset_name_clean = dataset_name
         self.raw_datasets = []
-        with open('/data/tiankaibin/llm/datasets/' + dataset_name + 'jsonl', 'r') as f:
+        with open('/data/tiankaibin/llm/datasets/' + dataset_name + '.jsonl', 'r') as f:
             for line in f.readlines():
                 self.raw_datasets.append(json.loads(line))
         random.shuffle(self.raw_datasets)
