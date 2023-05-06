@@ -18,7 +18,7 @@ deepspeed main.py \
    --data_path $DATASET \
    --data_split 10,0,0 \
    --model_name_or_path bigscience/bloomz-7b1 \
-   --model_cache /data/model_zoo \
+   --model_cache /data/zhaoliangxuan/model_zoo \
    --per_device_train_batch_size 16 \
    --per_device_eval_batch_size 16 \
    --max_seq_len 1024 \
@@ -38,3 +38,5 @@ deepspeed main.py \
    &> $OUTPUT/training.log
 
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'dolly' '' 'Goliath-Stage1-Dolly'
+
+# export http_proxy=http://oversea-squid1.jp.txyun:11080 https_proxy=http://oversea-squid1.jp.txyun:11080 no_proxy=localhost,127.0.0.1,localaddress,localdomain.com,internal,corp.kuaishou.com,test.gifshow.com,staging.kuaishou.com && cd /data/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat && pip install -r requirements.txt && pip install deepspeed
