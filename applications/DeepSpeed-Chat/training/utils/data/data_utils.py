@@ -277,11 +277,9 @@ def create_prompt_dataset(local_rank,
     buf_create_cache = torch.ByteTensor([not cache_found]).cuda()
     torch.distributed.all_reduce(buf_create_cache)
 
-    # rank > 0 or dataset already cached do not need to prepare dataset this time
-    should_prepare_dataset = local_rank <= 0 and buf_create_cache.item() != 0
-    # if this step asks to prepare
-    if force_prepare:
-        should_prepare_dataset = True
+    # Only prepare dataset when rank <= 0
+    # If dataset have not been cached, or outer call asks to prepare by force this time
+    should_prepare_dataset = local_rank <= 0 and (buf_create_cache.item() != 0 or force_prepare)
     if should_prepare_dataset:
         if len(data_path) == 1:  # Single dataset.
             train_dataset, eval_dataset = create_dataset(
