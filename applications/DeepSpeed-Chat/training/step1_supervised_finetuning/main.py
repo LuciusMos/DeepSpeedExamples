@@ -211,8 +211,7 @@ def main():
                             model_cache=args.model_cache)
 
     if args.lora_dim > 0:
-        model = convert_linear_layer_to_lora(model, args.lora_module_name,
-                                             args.lora_dim)
+        model = convert_linear_layer_to_lora(model, args.lora_module_name, args.lora_dim)
         if args.only_optimize_lora:
             model = only_optimize_lora_parameters(model)
 

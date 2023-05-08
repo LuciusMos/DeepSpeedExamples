@@ -232,7 +232,7 @@ class GoliathDataset(PromptRawDataset):
         return "<Q>{}<A>".format(sample['instruction'] + sample['input'])
 
     def get_chosen(self, sample):
-        return sample['output']
+        return sample['output'] + '</s>'
 
     def get_rejected(self, sample):
         print(f"Warning: dataset {self.dataset_name} does not include rejected response.")

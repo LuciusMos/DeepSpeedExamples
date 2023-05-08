@@ -99,7 +99,7 @@ class DeepSpeedPPOTrainer():
         attention_mask = seq.not_equal(pad_token_id).long()
 
         with torch.no_grad():
-            output = self.actor_model(seq, attention_mask=attention_mask)
+            output = self.actor_model(seq, attention_mask=attention_mask)  # in order to get output logit
             output_ref = self.ref_model(seq, attention_mask=attention_mask)
             reward_score = self.reward_model.forward_value(
                 seq, attention_mask,
@@ -110,7 +110,7 @@ class DeepSpeedPPOTrainer():
         logits = output.logits
         logits_ref = output_ref.logits
 
-        return {
+        return_experience = {
             'prompts': prompts,
             'logprobs': gather_log_probs(logits[:, :-1, :], seq[:, 1:]),
             'ref_logprobs': gather_log_probs(logits_ref[:, :-1, :], seq[:, 1:]),
@@ -119,6 +119,10 @@ class DeepSpeedPPOTrainer():
             'input_ids': seq,
             "attention_mask": attention_mask
         }
+        print('【【ppo_trainer.py/generate_experience')
+        for k in return_experience:
+            print('==', k, return_experience[k].shape)
+        return return_experience
 
     def compute_rewards(self, prompts, log_probs, ref_log_probs, reward_score,
                         action_mask):
@@ -128,10 +132,10 @@ class DeepSpeedPPOTrainer():
         start = prompts.shape[1] - 1
         ends = start + action_mask[:, start:].sum(1)
         reward_clip = torch.clamp(reward_score, -self.clip_reward_value,
-                                  self.clip_reward_value)
+                                  self.clip_reward_value)  # TODO: why reward clamp
         batch_size = log_probs.shape[0]
         for j in range(batch_size):
-            rewards[j, start:ends[j]][-1] += reward_clip[j]
+            rewards[j, start: ends[j]][-1] += reward_clip[j]
 
         return rewards
 
