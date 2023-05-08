@@ -85,7 +85,7 @@ class DeepSpeedPPOTrainer():
             if valid_ans_len[i] <= 1:  # if the answer is shorter than 1 token, drop it
                 continue
             else:
-                out_seq.append(seq[i:i + 1])
+                out_seq.append(seq[i: i + 1])
         out_seq = torch.cat(out_seq, dim=0)  # concate output in the batch dim
 
         return out_seq
@@ -111,21 +111,26 @@ class DeepSpeedPPOTrainer():
         logits_ref = output_ref.logits
 
         return_experience = {
-            'prompts': prompts,
+            # bs = 3, prompt_seqlen = 1200, ans_seqlen = 900
+            'ori_mask': mask,
+            'logits': logits,
+            'seq': seq,
+            'prompts': prompts,  # (bs, prompt_seqlen)
+            # 'logprobs': (bs, prompt_seqlen + ans_seqlen - 1), no first
             'logprobs': gather_log_probs(logits[:, :-1, :], seq[:, 1:]),
+            # 'ref_logprobs': (bs, prompt_seqlen + ans_seqlen - 1), no first
             'ref_logprobs': gather_log_probs(logits_ref[:, :-1, :], seq[:, 1:]),
-            'value': values,
-            'rewards': reward_score,
-            'input_ids': seq,
-            "attention_mask": attention_mask
+            'value': values,  # (bs, prompt_seqlen + ans_seqlen - 1), no last
+            'rewards': reward_score,   # (bs, )
+            'input_ids': seq,  # (bs, prompt_seqlen + ans_seqlen)
+            "attention_mask": attention_mask  # (bs, prompt_seqlen + ans_seqlen - 1)
         }
-        print('【【ppo_trainer.py/generate_experience')
-        for k in return_experience:
-            print('==', k, return_experience[k].shape)
+        if torch.distributed.get_rank() == 0:
+            for k in return_experience:
+                print('==', k, return_experience[k])
         return return_experience
 
-    def compute_rewards(self, prompts, log_probs, ref_log_probs, reward_score,
-                        action_mask):
+    def compute_rewards(self, prompts, log_probs, ref_log_probs, reward_score, action_mask):
 
         kl_divergence_estimate = -self.kl_ctl * (log_probs - ref_log_probs)
         rewards = kl_divergence_estimate
@@ -185,8 +190,7 @@ class DeepSpeedPPOTrainer():
         log_ratio = (logprobs - old_logprobs) * mask
         ratio = torch.exp(log_ratio)
         pg_loss1 = -advantages * ratio
-        pg_loss2 = -advantages * torch.clamp(ratio, 1.0 - self.cliprange,
-                                             1.0 + self.cliprange)
+        pg_loss2 = -advantages * torch.clamp(ratio, 1.0 - self.cliprange, 1.0 + self.cliprange)
         pg_loss = torch.sum(torch.max(pg_loss1, pg_loss2) * mask) / mask.sum()
         return pg_loss
 
@@ -199,8 +203,7 @@ class DeepSpeedPPOTrainer():
         )
         vf_loss1 = (values - returns)**2
         vf_loss2 = (values_clipped - returns)**2
-        vf_loss = 0.5 * torch.sum(
-            torch.max(vf_loss1, vf_loss2) * mask) / mask.sum()
+        vf_loss = 0.5 * torch.sum(torch.max(vf_loss1, vf_loss2) * mask) / mask.sum()
         return vf_loss
 
     def get_advantages_and_returns(self, values, rewards, start):

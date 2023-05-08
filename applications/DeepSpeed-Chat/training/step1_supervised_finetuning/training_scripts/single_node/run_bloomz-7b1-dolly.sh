@@ -38,6 +38,7 @@ deepspeed main.py \
    &> $OUTPUT/training.log
 
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'dolly' '' 'Goliath-Stage1-Dolly'
+# bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'dolly-lr2e-5' '' 'Goliath-Stage1-Dolly'
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'cot-dolly' '' 'Goliath-Stage1-Dolly_CoT'
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'chat-dolly' '' 'Goliath-Stage1-Dolly_Chat'
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'selfinst-dolly' '' 'Goliath-Stage1-Dolly_Selfinst'

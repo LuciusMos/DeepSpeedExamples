@@ -43,7 +43,7 @@ model_type = {1: "actor", 2: "reward", 3: "step3"}
 dse_url = "https://github.com/microsoft/DeepSpeedExamples/tree/master/applications/DeepSpeed-Chat/"
 
 # python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir bloomz-560m-523-leftpad --step 3
-# python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir clean-bloomz
+# python train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_node --output-dir clean-bloomz --step 3
 
 # == reward_model debug
 # python -m pdb train_bloomz.py --actor-model bigscience/bloomz-7b1 --reward-model bigscience/bloomz-560m --deployment-type single_gpu --output-dir bloomz-560m  --step 2
