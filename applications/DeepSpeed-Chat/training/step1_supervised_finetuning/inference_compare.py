@@ -199,7 +199,8 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
         r_base = generate(model_sft,
                           tokenizer,
                           inputs,
-                          num_beams=1,
+                          #   num_beams=1,  # Greedy
+                          num_beams=args.num_beams, do_sample=True,  # Beam-search multinomial sampling
                           num_return_sequences=args.num_return_sequences,
                           max_new_tokens=args.max_new_tokens)[0]
         r_base = phd_specified_post_process(r_base)
@@ -208,7 +209,8 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
         r_final_g = generate(model_final,
                              tokenizer,
                              inputs,
-                             num_beams=1,
+                             #   num_beams=1,  # Greedy
+                             num_beams=args.num_beams, do_sample=True,  # Beam-search multinomial sampling
                              num_return_sequences=args.num_return_sequences,
                              max_new_tokens=args.max_new_tokens)[0]
         r_final_g = phd_specified_post_process(r_final_g)
@@ -217,7 +219,8 @@ def prompt_eval(args, model_sft, model_final, model_final_ema, tokenizer, device
         r_final_ema_g = generate(model_final_ema,
                                  tokenizer,
                                  inputs,
-                                 num_beams=1,
+                                 #   num_beams=1,  # Greedy
+                                 num_beams=args.num_beams, do_sample=True,  # Beam-search multinomial sampling
                                  num_return_sequences=args.num_return_sequences,
                                  max_new_tokens=args.max_new_tokens)[0]
         r_final_ema_g = phd_specified_post_process(r_final_ema_g)

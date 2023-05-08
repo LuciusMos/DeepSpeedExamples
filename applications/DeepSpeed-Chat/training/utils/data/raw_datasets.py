@@ -206,6 +206,7 @@ class GoliathDataset(PromptRawDataset):
     def __init__(self, output_path, seed, local_rank, dataset_name):
         '''
         {"instruction": "谁将会在2023年赢得F1世界锦标赛？", "input": "", "output": "把下面的文本翻译成英语：Max Vestrapen", "index": 6008}
+        <Q>instruction+input<A>output
         '''
         self.output_path = output_path
         self.seed = seed
@@ -228,10 +229,7 @@ class GoliathDataset(PromptRawDataset):
         return self.raw_datasets[int(self.train_ratio * len(self.raw_datasets)):]
 
     def get_prompt(self, sample):
-        if sample["input"] == "":
-            return "<INSTRUCTION>{}<OUTPUT>".format(sample['instruction'])
-        else:
-            return "<INSTRUCTION>{}<INPUT>{}<OUTPUT>".format(sample['instruction'], sample['input'])
+        return "<Q>{}<A>".format(sample['instruction'] + sample['input'])
 
     def get_chosen(self, sample):
         return sample['output']
