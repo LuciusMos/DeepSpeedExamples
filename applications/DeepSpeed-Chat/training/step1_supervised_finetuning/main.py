@@ -55,7 +55,7 @@ def parse_args():
         '--data_output_path',
         type=str,
         default='/tmp/data_files/',
-        help='Where to store the data-related files such as shuffle index. This needs to be on a local storage of a node (not on a shared storage)'
+        help='Where to store the data-related files such as shuffle index. This needs to be on a local storage of a node (not on a shared storage)'  # noqa
     )
     parser.add_argument(
         "--model_name_or_path",
@@ -106,6 +106,12 @@ def parse_args():
         type=int,
         default=1,
         help="Number of updates steps to accumulate before performing a backward/update pass.",
+    )
+    parser.add_argument(
+        "--save_iter",
+        type=int,
+        default=99999999,
+        help="How many iters will it take to save model at intervals",
     )
     parser.add_argument(
         "--lr_scheduler_type",
@@ -267,8 +273,7 @@ def main():
         return perplexity
 
     # Split weights in two groups, one with weight decay and the other not.
-    optimizer_grouped_parameters = get_optimizer_grouped_parameters(
-        model, args.weight_decay)
+    optimizer_grouped_parameters = get_optimizer_grouped_parameters(model, args.weight_decay)
 
     AdamOptimizer = DeepSpeedCPUAdam if args.offload else FusedAdam
     optimizer = AdamOptimizer(optimizer_grouped_parameters,
@@ -303,6 +308,24 @@ def main():
     perplexity = evaluation(model, eval_dataloader)
     print_rank_0(f"ppl: {perplexity}", args.global_rank)
 
+    def save_model(epoch, iter_accum, model):
+        print_rank_0('saving the model ... epoch:{}, iter:{}'.format(epoch, iter_accum), args.global_rank)
+        model = convert_lora_to_linear_layer(model)
+        if args.global_rank == 0:
+            save_hf_format(model, tokenizer, args)
+        if args.zero_stage == 3:
+            # For zero stage 3, each gpu only has a part of the model, so we need a special save function
+            save_zero_three_model(model,
+                                  args.global_rank,
+                                  args.output_dir,
+                                  zero_stage=args.zero_stage)
+        # LoRA, convert back to lora
+        if args.lora_dim > 0:
+            model = convert_linear_layer_to_lora(model, args.lora_module_name, args.lora_dim)
+            if args.only_optimize_lora:
+                model = only_optimize_lora_parameters(model)
+
+    iter_cnt = 0
     for epoch in range(args.num_train_epochs):
         print_rank_0(
             f"Beginning of Epoch {epoch+1}/{args.num_train_epochs}, Total Micro Batches {len(train_dataloader)}",
@@ -314,28 +337,21 @@ def main():
             loss = outputs.loss
             model.backward(loss)
             model.step()
+            iter_cnt += 1
+            if iter % args.save_iter == 0 and args.output_dir is not None:
+                save_model(epoch, iter_cnt)
 
         # Evaluate perplexity on the validation set.
-        print_rank_0(
-            f"***** Evaluating perplexity, Epoch {epoch+1}/{args.num_train_epochs} *****",
-            args.global_rank)
-        perplexity = evaluation(model, eval_dataloader)
-        print_rank_0(f"ppl: {perplexity}", args.global_rank)
+        print_rank_0(f"***** Evaluating perplexity, Epoch {epoch+1}/{args.num_train_epochs} *****", args.global_rank)
+        try:
+            perplexity = evaluation(model, eval_dataloader)
+            print_rank_0(f"ppl: {perplexity}", args.global_rank)
+        except Exception as e:
+            print(e)
         model.tput_timer.update_epoch_count()
 
     if args.output_dir is not None:
-        print_rank_0('saving the final model ...', args.global_rank)
-        model = convert_lora_to_linear_layer(model)
-
-        if args.global_rank == 0:
-            save_hf_format(model, tokenizer, args)
-
-        if args.zero_stage == 3:
-            # For zero stage 3, each gpu only has a part of the model, so we need a special save function
-            save_zero_three_model(model,
-                                  args.global_rank,
-                                  args.output_dir,
-                                  zero_stage=args.zero_stage)
+        save_model('N', 'N')
 
 
 if __name__ == "__main__":

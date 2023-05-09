@@ -156,6 +156,47 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
         return sample['prompt'] + sample['rejected']
 
 
+# Chineses dataset(Open Domain 220K); SFT
+class OpenDomain220kDataset(PromptRawDataset):
+
+    def __init__(self, output_path, seed, local_rank):
+        # {'text': '<Q>...<A>...'}
+        self.output_path = output_path
+        self.seed = seed
+        self.local_rank = local_rank
+        self.dataset_name = "open_domain_220k"
+        self.dataset_name_clean = "open_omain_220k"
+        self.raw_datasets = []
+        with open('/data/phd/data/llm/llm-sft/open_domain/220k_preprocess.csv', 'r') as f:
+            for line in f:
+                self.raw_datasets.append(json.loads(line)['text'])
+        random.shuffle(self.raw_datasets)
+        self.eval_ratio_overlap = 0.1
+
+    def get_train_data(self):
+        return self.raw_datasets
+
+    def get_eval_data(self):
+        return self.raw_datasets[int((1.0 - self.eval_ratio_overlap) * len(self.raw_datasets)):]
+
+    def get_prompt(self, sample):
+        return sample['prompt'].split('<A>')[0] + '<A>'
+
+    def get_chosen(self, sample):
+        return sample['chosen'].split('<A>')[1]
+
+    def get_rejected(self, sample):
+        print(f"Warning: dataset {self.dataset_name} does not include rejected response.")
+        return None
+
+    def get_prompt_and_chosen(self, sample):
+        return sample
+
+    def get_prompt_and_rejected(self, sample):
+        print(f"Warning: dataset {self.dataset_name} does not include rejected response.")
+        return None
+
+
 # Chineses dataset(keyword); SFT
 class KeywordDataset(PromptRawDataset):
 

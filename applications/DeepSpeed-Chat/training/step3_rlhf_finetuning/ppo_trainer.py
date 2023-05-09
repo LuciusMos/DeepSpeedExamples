@@ -112,9 +112,9 @@ class DeepSpeedPPOTrainer():
 
         return_experience = {
             # bs = 3, prompt_seqlen = 1200, ans_seqlen = 900
-            'ori_mask': mask,
-            'logits': logits,
-            'seq': seq,
+            'ori_mask': mask,  # (bs, prompt_seqlen)
+            'logits': logits,  # (bs, prompt_seqlen + ans_seqlen, action_num)
+            'seq': seq,  # (bs, prompt_seqlen + ans_seqlen)
             'prompts': prompts,  # (bs, prompt_seqlen)
             # 'logprobs': (bs, prompt_seqlen + ans_seqlen - 1), no first
             'logprobs': gather_log_probs(logits[:, :-1, :], seq[:, 1:]),

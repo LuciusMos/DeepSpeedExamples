@@ -27,6 +27,8 @@ def get_raw_dataset(dataset_name, output_path, seed, local_rank):
                                                     local_rank, dataset_name)
     elif "phd_qualified_seeds" in dataset_name:
         return raw_datasets.PhdQualifiedSeedsDataset(output_path, seed, local_rank)
+    elif "open_domain_220k" in dataset_name:
+        return raw_datasets.OpenDomain220kDataset(output_path, seed, local_rank)
     elif "keyword" in dataset_name:
         return raw_datasets.KeywordDataset(output_path, seed, local_rank)
     elif "Goliath-Stage1" in dataset_name:

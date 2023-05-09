@@ -389,7 +389,7 @@ def main():
                                      args.per_device_mini_train_batch_size)
 
     def save_model(epoch, iter):
-        print_rank_0('saving model ... epoch:{}, iter:{}'.format(epoch, iter))
+        print_rank_0('saving model ... epoch:{}, iter:{}'.format(epoch, iter), args.global_rank)
         rlhf_engine.actor = convert_lora_to_linear_layer(rlhf_engine.actor)
         rlhf_engine.critic = convert_lora_to_linear_layer(rlhf_engine.critic)
         if args.enable_ema:
