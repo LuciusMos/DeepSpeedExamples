@@ -36,3 +36,6 @@ deepspeed main.py \
    --deepspeed \
    --output_dir $OUTPUT \
    &> $OUTPUT/training.log
+
+
+# bash ./training_scripts/single_node/run_bloomz-7b1-open220k.sh 'open220k' ''

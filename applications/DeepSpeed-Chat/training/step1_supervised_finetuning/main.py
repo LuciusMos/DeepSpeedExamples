@@ -338,8 +338,8 @@ def main():
             model.backward(loss)
             model.step()
             iter_cnt += 1
-            if iter % args.save_iter == 0 and args.output_dir is not None:
-                save_model(epoch, iter_cnt)
+            if iter_cnt % args.save_iter == 0 and args.output_dir is not None:
+                save_model(epoch, iter_cnt, model)
 
         # Evaluate perplexity on the validation set.
         print_rank_0(f"***** Evaluating perplexity, Epoch {epoch+1}/{args.num_train_epochs} *****", args.global_rank)
@@ -351,7 +351,7 @@ def main():
         model.tput_timer.update_epoch_count()
 
     if args.output_dir is not None:
-        save_model('N', 'N')
+        save_model('N', 'N', model)
 
 
 if __name__ == "__main__":
