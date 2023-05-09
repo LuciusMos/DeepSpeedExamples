@@ -333,7 +333,7 @@ def main():
             args.global_rank)
         model.train()
         for step, batch in enumerate(train_dataloader):
-            get_accelerator.empty_cache()
+            get_accelerator().empty_cache()
             batch = to_device(batch, device)
             outputs = model(**batch, use_cache=False)
             loss = outputs.loss
