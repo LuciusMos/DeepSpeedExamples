@@ -14,7 +14,7 @@ fi
 mkdir -p $OUTPUT
 
 deepspeed main.py \
-   --data_path open220k \
+   --data_path open_domain_220k \
    --data_split 10,0,0 \
    --model_name_or_path bigscience/bloomz-7b1 \
    --model_cache /data/zhaoliangxuan/model_zoo \
