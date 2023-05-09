@@ -268,10 +268,12 @@ def create_prompt_dataset(local_rank,
     tokenizer_name = tokenizer.init_kwargs["name_or_path"].replace("/", "_")
     fname = f"{fname}_split{data_split}_phase{train_phase}_seed{seed}_tokenizer{tokenizer_name}_seqlen{max_seq_len}_sft{sft_cache_key}"
     fname = "_".join(fname.split("/"))
-    print('【【data_utils/create_prompt_dataset')
-    print('original fname:', fname)
+    if local_rank <= 0:
+        print('【【data_utils/create_prompt_dataset')
+        print('original fname:', fname)
     fname = hashlib.sha256(fname.encode()).hexdigest()  # hash the file name to avoid too long file name
-    print('hashed fname:', fname)
+    if local_rank <= 0:
+        print('hashed fname:', fname)
     train_fname = f"{output_path}/traindata_{fname}.pt"
     eval_fname = f"{output_path}/evaldata_{fname}.pt"
 
@@ -344,15 +346,16 @@ def create_prompt_dataset(local_rank,
         torch.save(eval_dataset, eval_fname)
     torch.distributed.barrier()
     train_dataset, eval_dataset = torch.load(train_fname), torch.load(eval_fname)
-    print('【【data_utils/create_prompt_dataset, train_phase={}, prepare_this_time={}'.format(
-        train_phase, should_prepare_dataset))
-    print('【【train_fname:{}, eval_fname:{}'.format(train_fname, eval_fname))
-    print('train_dataset.prompt', len(train_dataset.prompt_dataset), train_dataset.prompt_dataset[:2])
-    print('train_dataset.chose', len(train_dataset.chosen_dataset), train_dataset.chosen_dataset[:2])
-    print('train_dataset.reject', len(train_dataset.reject_dataset), train_dataset.reject_dataset[:2])
-    print('eval_dataset.prompt', len(eval_dataset.prompt_dataset), eval_dataset.prompt_dataset[:2])
-    print('eval_dataset.chose', len(eval_dataset.chosen_dataset), eval_dataset.chosen_dataset[:2])
-    print('eval_dataset.reject', len(eval_dataset.reject_dataset), eval_dataset.reject_dataset[:2])
+    if local_rank <= 0:
+        print('【【data_utils/create_prompt_dataset, train_phase={}, prepare_this_time={}'.format(
+            train_phase, should_prepare_dataset))
+        print('【【train_fname:{}, eval_fname:{}'.format(train_fname, eval_fname))
+        print('train_dataset.prompt', len(train_dataset.prompt_dataset), train_dataset.prompt_dataset[:2])
+        print('train_dataset.chose', len(train_dataset.chosen_dataset), train_dataset.chosen_dataset[:2])
+        print('train_dataset.reject', len(train_dataset.reject_dataset), train_dataset.reject_dataset[:2])
+        print('eval_dataset.prompt', len(eval_dataset.prompt_dataset), eval_dataset.prompt_dataset[:2])
+        print('eval_dataset.chose', len(eval_dataset.chosen_dataset), eval_dataset.chosen_dataset[:2])
+        print('eval_dataset.reject', len(eval_dataset.reject_dataset), eval_dataset.reject_dataset[:2])
     return train_dataset, eval_dataset
 
 
