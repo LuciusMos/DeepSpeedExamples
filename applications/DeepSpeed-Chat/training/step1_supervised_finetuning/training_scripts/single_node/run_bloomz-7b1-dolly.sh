@@ -44,5 +44,6 @@ deepspeed main.py \
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'chat-dolly' '' 'Goliath-Stage1-Dolly_Chat'
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'selfinst-dolly' '' 'Goliath-Stage1-Dolly_Selfinst'
 # bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'full-dolly' '' 'Goliath-Stage1-Full'
+# bash ./training_scripts/single_node/run_bloomz-7b1-dolly.sh 'full-dolly-accelerator' '' 'Goliath-Stage1-Full'
 
 # export http_proxy=http://oversea-squid1.jp.txyun:11080 https_proxy=http://oversea-squid1.jp.txyun:11080 no_proxy=localhost,127.0.0.1,localaddress,localdomain.com,internal,corp.kuaishou.com,test.gifshow.com,staging.kuaishou.com && cd /data/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat && pip install -r requirements.txt && pip install deepspeed

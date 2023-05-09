@@ -21,6 +21,7 @@ from transformers import (
 
 import deepspeed
 from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam
+from deepspeed.accelerator import get_accelerator
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from utils.model.model_utils import create_hf_model  # noqa
@@ -332,6 +333,7 @@ def main():
             args.global_rank)
         model.train()
         for step, batch in enumerate(train_dataloader):
+            get_accelerator.empty_cache()
             batch = to_device(batch, device)
             outputs = model(**batch, use_cache=False)
             loss = outputs.loss
