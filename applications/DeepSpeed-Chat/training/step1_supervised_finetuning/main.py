@@ -313,12 +313,12 @@ def main():
         print_rank_0('saving the model ... epoch:{}, iter:{}'.format(epoch, iter_accum), args.global_rank)
         model = convert_lora_to_linear_layer(model)
         if args.global_rank == 0:
-            save_hf_format(model, tokenizer, args)
+            save_hf_format(model, tokenizer, args, sub_folder='e{}-i{}'.format(epoch, iter_accum))
         if args.zero_stage == 3:
             # For zero stage 3, each gpu only has a part of the model, so we need a special save function
             save_zero_three_model(model,
-                                  args.global_rank,
-                                  args.output_dir,
+                                  global_rank=args.global_rank,
+                                  save_dir=os.path.join(args.output_dir, 'e{}-i{}'.format(epoch, iter_accum)),
                                   zero_stage=args.zero_stage)
         # LoRA, convert back to lora
         if args.lora_dim > 0:
