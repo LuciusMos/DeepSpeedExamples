@@ -364,7 +364,7 @@ def main():
     # create dataloaders (prompt + unsupervised)
     # because step 1 & 2 use right-padding, and step 3 uses left-padding, here pass `force_prepare=True`
     prompt_train_dataloader, unsupervised_train_dataloader, num_total_iters = create_datasets(
-        args=args, tokenizer=tokenizer, train_phase=3, force_prepare=False)
+        args=args, tokenizer=tokenizer, train_phase=3, force_prepare=True)
 
     # RLHF engine is responsible for creating models, loading checkpoints, ds-initialize models/optims/lr-schedulers
     rlhf_engine = DeepSpeedRLHFEngine(
