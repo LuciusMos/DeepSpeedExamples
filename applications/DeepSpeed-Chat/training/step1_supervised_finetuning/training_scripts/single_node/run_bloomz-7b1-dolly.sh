@@ -16,19 +16,20 @@ mkdir -p $OUTPUT
 
 deepspeed main.py \
    --data_path $DATASET \
-   --data_split 7,3,0 \
+   --data_split 10,0,0 \
    --model_name_or_path bigscience/bloomz-7b1 \
    --model_cache /data/zhaoliangxuan/model_zoo \
-   --per_device_train_batch_size 16 \
-   --per_device_eval_batch_size 16 \
-   --max_seq_len 1024 \
-   --learning_rate 2e-5 \
-   --weight_decay 0.1 \
-   --num_train_epochs 2 \
-   --gradient_accumulation_steps 1 \
+   --per_device_train_batch_size 8 \
+   --per_device_eval_batch_size 4 \
+   --max_seq_len 2048 \
+   --learning_rate 5e-5 \
+   --weight_decay 0.0 \
+   --save_iter 200 \
+   --num_train_epochs 3 \
+   --gradient_accumulation_steps 2 \
    --lr_scheduler_type cosine \
    --num_warmup_steps 0 \
-   --seed 1234 \
+   --seed 0 \
    --gradient_checkpointing \
    --zero_stage $ZERO_STAGE \
    --lora_dim 128 \
