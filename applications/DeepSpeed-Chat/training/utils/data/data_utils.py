@@ -3,7 +3,8 @@
 
 # DeepSpeed Team
 """
-Part of the code was adopted from https://github.com/microsoft/Megatron-DeepSpeed/blob/main/megatron/data/dataset_utils.py
+Part of the code was adopted from
+https://github.com/microsoft/Megatron-DeepSpeed/blob/main/megatron/data/dataset_utils.py
 """
 import torch
 from torch.utils.data import Dataset, Subset, ConcatDataset
@@ -266,7 +267,7 @@ def create_prompt_dataset(local_rank,
     fname = "_".join(data_path)
     sft_cache_key = "_".join(sft_only_data_path)
     tokenizer_name = tokenizer.init_kwargs["name_or_path"].replace("/", "_")
-    fname = f"{fname}_split{data_split}_phase{train_phase}_seed{seed}_tokenizer{tokenizer_name}_seqlen{max_seq_len}_sft{sft_cache_key}"
+    fname = f"{fname}_split{data_split}_phase{train_phase}_seed{seed}_tokenizer{tokenizer_name}_seqlen{max_seq_len}_sft{sft_cache_key}"  # noqa
     fname = "_".join(fname.split("/"))
     if local_rank <= 0:
         print('【【data_utils/create_prompt_dataset')

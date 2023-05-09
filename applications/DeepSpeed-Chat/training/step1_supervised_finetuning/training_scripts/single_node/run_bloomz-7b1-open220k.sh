@@ -23,7 +23,7 @@ deepspeed main.py \
    --max_seq_len 2048 \
    --learning_rate 5e-5 \
    --weight_decay 0.0 \
-   --num_train_epochs 70 \
+   --num_train_epochs 50 \
    --save_iter 1000 \
    --gradient_accumulation_steps 2 \
    --lr_scheduler_type cosine \

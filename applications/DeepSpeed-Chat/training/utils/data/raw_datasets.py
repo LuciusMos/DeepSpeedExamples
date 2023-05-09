@@ -165,11 +165,13 @@ class OpenDomain220kDataset(PromptRawDataset):
         self.seed = seed
         self.local_rank = local_rank
         self.dataset_name = "open_domain_220k"
-        self.dataset_name_clean = "open_omain_220k"
+        self.dataset_name_clean = "open_domain_220k"
         self.raw_datasets = []
         with open('/data/phd/data/llm/llm-sft/open_domain/220k_preprocess.csv', 'r') as f:
             for line in f:
-                self.raw_datasets.append(json.loads(line)['text'])
+                string_line = json.loads(line)['text']
+                if len(string_line) <= 2048:
+                    self.raw_datasets.append(string_line)
         random.shuffle(self.raw_datasets)
         self.eval_ratio_overlap = 0.1
 
