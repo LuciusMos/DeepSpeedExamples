@@ -333,6 +333,7 @@ def main():
             args.global_rank)
         model.train()
         for step, batch in enumerate(train_dataloader):
+            torch.distributed.barrier()
             get_accelerator().empty_cache()
             batch = to_device(batch, device)
             outputs = model(**batch, use_cache=False)
