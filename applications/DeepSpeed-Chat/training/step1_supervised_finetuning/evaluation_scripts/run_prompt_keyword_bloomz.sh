@@ -8,7 +8,7 @@
 export CUDA_VISIBLE_DEVICES=0
 python prompt_eval.py \
     --model_name_or_path_baseline bigscience/bloomz-7b1 \
-    --model_baseline_cache /data/model_zoo \
+    --model_baseline_cache /data/zhaoliangxuan/model_zoo \
     --model_name_or_path_finetune /home/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/keyword-bloomz-7b1-sft/actor-models/bloomz-7b1 \
     --language keyword \
     --max_new_tokens 512 \

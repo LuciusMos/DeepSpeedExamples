@@ -17,7 +17,7 @@ deepspeed main.py \
    --data_path phd_qualified_seeds \
    --data_split 5,2,3 \
    --model_name_or_path bigscience/bloomz-7b1 \
-   --model_cache /data/model_zoo \
+   --model_cache /data/zhaoliangxuan/model_zoo \
    --per_device_train_batch_size 16 \
    --per_device_eval_batch_size 16 \
    --max_seq_len 1024 \

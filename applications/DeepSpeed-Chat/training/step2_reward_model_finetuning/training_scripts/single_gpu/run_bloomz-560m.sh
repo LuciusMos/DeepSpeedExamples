@@ -17,7 +17,7 @@ deepspeed --num_gpus 1 main.py \
    --data_path phd_qualified_seeds \
    --data_split 5,2,3 \
    --model_name_or_path bigscience/bloomz-560m \
-   --model_cache /data/model_zoo \
+   --model_cache /data/zhaoliangxuan/model_zoo \
    --num_padding_at_beginning 0 \
    --gradient_accumulation_steps 4 \
    --per_device_train_batch_size 2 \
