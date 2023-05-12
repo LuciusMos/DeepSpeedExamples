@@ -24,7 +24,7 @@ model_dict = {
 model_name = "FreedomIntelligence/phoenix-inst-chat-7b"
 
 if __name__ == '__main__':
-    tokenizer = AutoTokenizer.from_pretrained(model_dict[model_name], trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     model = model_dict[model_name]["model"].from_pretrained(
         model_name,
         trust_remote_code=True,
