@@ -207,6 +207,11 @@ def main():
 
     torch.distributed.barrier()
 
+    # if "chatglm" in args.model_name_or_path:
+    #     tokenizer = load_hf_chatglm_tokenizer(args.model_name_or_path,
+    #                                           trust_remote_code=True)
+    # else:
+    #     tokenizer = load_hf_tokenizer(args.model_name_or_path, fast_tokenizer=True, padding_side="right")
     tokenizer = load_hf_tokenizer(args.model_name_or_path, fast_tokenizer=True, padding_side="right")
     tokenizer.pad_token = tokenizer.eos_token
 

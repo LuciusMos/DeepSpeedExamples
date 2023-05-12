@@ -37,3 +37,5 @@ deepspeed main.py \
    --deepspeed \
    --output_dir $OUTPUT \
    &> $OUTPUT/training.log
+
+# bash ./training_scripts/single_node/run_chatglm-6b-open.sh "chatglm-6b-test" "3" "220k_preprocess"
