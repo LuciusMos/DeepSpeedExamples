@@ -27,7 +27,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 from utils.model.model_utils import create_hf_model  # noqa
 from utils.module.lora import convert_linear_layer_to_lora, convert_lora_to_linear_layer, only_optimize_lora_parameters  # noqa
 from utils.ds_utils import get_train_ds_config  # noqa
-from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, get_optimizer_grouped_parameters, save_zero_three_model, load_hf_tokenizer  # noqa
+from utils.utils import print_rank_0, to_device, save_hf_format, set_random_seed, get_all_reduce_mean, get_optimizer_grouped_parameters, save_zero_three_model, load_hf_tokenizer, load_hf_chatglm_tokenizer  # noqa
 from utils.data.data_utils import create_prompt_dataset  # noqa
 
 
@@ -207,12 +207,10 @@ def main():
 
     torch.distributed.barrier()
 
-    # if "chatglm" in args.model_name_or_path:
-    #     tokenizer = load_hf_chatglm_tokenizer(args.model_name_or_path,
-    #                                           trust_remote_code=True)
-    # else:
-    #     tokenizer = load_hf_tokenizer(args.model_name_or_path, fast_tokenizer=True, padding_side="right")
-    tokenizer = load_hf_tokenizer(args.model_name_or_path, fast_tokenizer=True, padding_side="right")
+    if "chatglm" in args.model_name_or_path:
+        tokenizer = load_hf_chatglm_tokenizer(args.model_name_or_path, trust_remote_code=True)
+    else:
+        tokenizer = load_hf_tokenizer(args.model_name_or_path, fast_tokenizer=True, padding_side="right")
     tokenizer.pad_token = tokenizer.eos_token
 
     model = create_hf_model(AutoModelForCausalLM,
