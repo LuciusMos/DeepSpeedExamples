@@ -5,6 +5,7 @@
 # DeepSpeed Team
 OUTPUT=$1
 ZERO_STAGE=$2
+DATASET=$3
 if [ "$OUTPUT" == "" ]; then
     OUTPUT=./output
 fi
@@ -14,11 +15,11 @@ fi
 mkdir -p $OUTPUT
 
 deepspeed main.py \
-   --data_path open_domain_220k \
+   --data_path $DATASET \
    --data_split 10,0,0 \
    --model_name_or_path bigscience/bloomz-7b1 \
    --model_cache /data/zhaoliangxuan/model_zoo \
-   --per_device_train_batch_size 5 \
+   --per_device_train_batch_size 6 \
    --per_device_eval_batch_size 4 \
    --max_seq_len 2048 \
    --learning_rate 5e-5 \
@@ -37,5 +38,6 @@ deepspeed main.py \
    --output_dir $OUTPUT \
    &> $OUTPUT/training.log
 
-
-# bash ./training_scripts/single_node/run_bloomz-7b1-open220k.sh 'open220k' ''
+# bash ./training_scripts/single_node/run_bloomz-7b1-open.sh goliath-stage1-mt 3 Goliath-Stage1 
+# bash ./training_scripts/single_node/run_bloomz-7b1-open.sh open220k 3 open_domain_220k
+# bash ./training_scripts/single_node/run_bloomz-7b1-open.sh goliath-stage1 3 Goliath-Stage1 

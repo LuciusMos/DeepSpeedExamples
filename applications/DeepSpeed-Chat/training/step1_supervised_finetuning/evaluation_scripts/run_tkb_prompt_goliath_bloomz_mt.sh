@@ -7,8 +7,8 @@
 # You can provide two models to compare the performance of the sft and the final model
 export CUDA_VISIBLE_DEVICES=0
 python inference_compare.py \
-    --output_file open220k-dschat-1epoch.json \
-    --model_name_or_path_sft /data/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/training/step1_supervised_finetuning/open220k/e1-i5000 \
+    --output_file goliath-full-dschat.json \
+    --model_name_or_path_sft /data/zhaoliangxuan/DeepSpeedExamples/applications/DeepSpeed-Chat/training/step1_supervised_finetuning/goliath-stage1-mt/e1-i6000 \
     --language goliath-open-domain \
     --max_new_tokens 2048 \
     --test_sample_num -1

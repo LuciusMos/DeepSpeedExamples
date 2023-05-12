@@ -100,7 +100,7 @@ def parse_args():
         "--language",
         type=str,
         default="English",
-        choices=["English", "Chinese", "Japanese", "phd", "keyword"],
+        choices=["goliath-open-domain","English", "Chinese", "Japanese", "phd", "keyword"],
     )
     parser.add_argument(
         "--test_sample_num",
@@ -290,9 +290,10 @@ def main():
 
     device = torch.device("cuda:0")
     # step 1 & 2 use right-padding, step 3 uses left-padding
-    model_save_path = args.model_name_or_path_final
+    model_save_path = args.model_name_or_path_sft
     if model_save_path is None:
         model_save_path = args.model_name_or_path_final_ema
+    
     tokenizer = load_hf_tokenizer(model_save_path, fast_tokenizer=True, padding_side="left")
 
     # model_baseline = create_hf_model(AutoModelForCausalLM,

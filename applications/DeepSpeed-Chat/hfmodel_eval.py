@@ -22,7 +22,7 @@ model_name = "THUDM/chatglm-6b"
 if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_name, trust_remote_code=True,
-                                      cache_dir='/data/zhaoliangxuan/model_zoo').cuda()
+                                      cache_dir='/data/zhaoliangxuan/model_zoo').half().cuda()
     model = model.eval()
     for prompt in prompts:
         response, history = model.chat(tokenizer, prompt, history=[])

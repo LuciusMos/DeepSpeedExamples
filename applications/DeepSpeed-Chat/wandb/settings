@@ -1,0 +1,5 @@
+[default]
+entity = ks-creative-ad-llm
+project = dschat-ppo
+base_url = https://api.wandb.ai
+

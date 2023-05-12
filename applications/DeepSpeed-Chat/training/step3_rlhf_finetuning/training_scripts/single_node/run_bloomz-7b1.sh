@@ -31,8 +31,8 @@ deepspeed --master_port 12346 main.py \
    --actor_model_name_or_path $ACTOR_MODEL_PATH \
    --critic_model_name_or_path $CRITIC_MODEL_PATH \
    --num_padding_at_beginning ${Num_Padding_at_Beginning} \
-   --per_device_train_batch_size 4 \
-   --per_device_mini_train_batch_size 4 \
+   --per_device_train_batch_size 3 \
+   --per_device_mini_train_batch_size 3 \
    --generation_batch_numbers 1 \
    --ppo_epochs 1 \
    --max_answer_seq_len 900 \

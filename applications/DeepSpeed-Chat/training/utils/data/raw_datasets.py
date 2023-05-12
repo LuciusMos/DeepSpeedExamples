@@ -156,18 +156,18 @@ class PhdQualifiedSeedsDataset(PromptRawDataset):
         return sample['prompt'] + sample['rejected']
 
 
-# Chineses dataset(Open Domain 220K); SFT
-class OpenDomain220kDataset(PromptRawDataset):
+# Chineses dataset(Open Domain); SFT
+class OpenDomainDataset(PromptRawDataset):
 
-    def __init__(self, output_path, seed, local_rank):
-        # {'text': '<Q>...<A>...'}
+    def __init__(self, output_path, seed, local_rank, dataset):
+        # {'text': '<Q>...<A>...<Q>...<A>'}
         self.output_path = output_path
         self.seed = seed
         self.local_rank = local_rank
-        self.dataset_name = "open_domain_220k"
-        self.dataset_name_clean = "open_domain_220k"
+        self.dataset_name = dataset
+        self.dataset_name_clean = dataset
         self.raw_datasets = []
-        with open('/data/phd/data/llm/llm-sft/open_domain/220k_preprocess.csv', 'r') as f:
+        with open('/data/phd/data/llm/llm-sft/open_domain/{}.jsonl'.format(dataset), 'r') as f:
             for line in f:
                 string_line = json.loads(line)['text']
                 if len(string_line) <= 2048:
@@ -182,10 +182,11 @@ class OpenDomain220kDataset(PromptRawDataset):
         return self.raw_datasets[int((1.0 - self.eval_ratio_overlap) * len(self.raw_datasets)):]
 
     def get_prompt(self, sample):
-        return sample['prompt'].split('<A>')[0] + '<A>'
+        # consider mutiple <Q> <A>
+        return '<A>'.join(sample['prompt'].split('<A>')[:-1]) + '<A>'
 
     def get_chosen(self, sample):
-        return sample['chosen'].split('<A>')[1]
+        return sample['chosen'].split('<A>')[-1]
 
     def get_rejected(self, sample):
         print(f"Warning: dataset {self.dataset_name} does not include rejected response.")

@@ -256,6 +256,9 @@ def main():
         model.eval()
         losses = 0
         for step, batch in enumerate(eval_dataloader):
+            batch["input_ids"] = batch["input_ids"].to(torch.int64)
+            batch["attention_mask"] = batch["attention_mask"].to(torch.int64)
+            batch["labels"] = batch["labels"].to(torch.int64)
             batch = to_device(batch, device)
             with torch.no_grad():
                 outputs = model(**batch)
@@ -335,6 +338,9 @@ def main():
         for step, batch in enumerate(train_dataloader):
             torch.distributed.barrier()
             get_accelerator().empty_cache()
+            batch["input_ids"] = batch["input_ids"].to(torch.int64)
+            batch["attention_mask"] = batch["attention_mask"].to(torch.int64)
+            batch["labels"] = batch["labels"].to(torch.int64)
             batch = to_device(batch, device)
             outputs = model(**batch, use_cache=False)
             loss = outputs.loss

@@ -28,13 +28,13 @@ def get_raw_dataset(dataset_name, output_path, seed, local_rank):
                                                     local_rank, dataset_name)
     elif "phd_qualified_seeds" in dataset_name:
         return raw_datasets.PhdQualifiedSeedsDataset(output_path, seed, local_rank)
-    elif "open_domain_220k" in dataset_name:
-        return raw_datasets.OpenDomain220kDataset(output_path, seed, local_rank)
+    elif ("preprocess" in dataset_name) or ("phoenix" in dataset_name):
+        return raw_datasets.OpenDomainDataset(output_path, seed, local_rank, dataset_name)
     elif "keyword" in dataset_name:
         return raw_datasets.KeywordDataset(output_path, seed, local_rank)
-    elif "Goliath-Stage1" in dataset_name:
+#    elif "Goliath-Stage1" in dataset_name:
         # Because there are many Goliath-Stage1 datasets
-        return raw_datasets.GoliathDataset(output_path, seed, local_rank, dataset_name)
+#        return raw_datasets.GoliathDataset(output_path, seed, local_rank, dataset_name)
     elif "Dahoas/synthetic-instruct-gptj-pairwise" in dataset_name:
         return raw_datasets.DahoasSyntheticinstructgptjpairwiseDataset(
             output_path, seed, local_rank, dataset_name)
@@ -169,8 +169,8 @@ def create_dataset_split(current_dataset, raw_dataset, train_phase, tokenizer,
                                          padding="max_length",
                                          truncation=True,
                                          return_tensors="pt")
-                chosen_token["input_ids"] = chosen_token["input_ids"].squeeze(0)
-                chosen_token["attention_mask"] = chosen_token["attention_mask"].squeeze(0)
+                chosen_token["input_ids"] = chosen_token["input_ids"].squeeze(0).to(torch.int32)
+                chosen_token["attention_mask"] = chosen_token["attention_mask"].squeeze(0).to(torch.int32)
                 chosen_dataset.append(chosen_token)
 
     elif train_phase == 2:
@@ -309,7 +309,6 @@ def create_prompt_dataset(local_rank,
             eval_dataset = ConcatDataset(eval_datasets)
             shuffle_idx = get_shuffle_idx(seed, eval_size)
             eval_dataset = Subset(eval_dataset, shuffle_idx.tolist())
-
         # Append the SFT-only dataset if it exists, and current phase is 1(SFT).
         if train_phase == 1 and sft_only_data_path:
             sft_train_datasets = []
