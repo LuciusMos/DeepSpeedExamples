@@ -67,10 +67,10 @@ def load_hf_chatglm_tokenizer(model_name_or_path, trust_remote_code=True):
             model_name = model_json_file["_name_or_path"]
             # print(model_name)
             tokenizer = AutoTokenizer.from_pretrained(
-                model_name, trust_remote_code=trust_remote_code)
+                model_name, fast_tokenizer=True, trust_remote_code=trust_remote_code)
     else:
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name_or_path, trust_remote_code=trust_remote_code)
+            model_name_or_path, fast_tokenizer=True, trust_remote_code=trust_remote_code)
     return tokenizer
 
 
