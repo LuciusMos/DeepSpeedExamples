@@ -260,7 +260,7 @@ def main():
         losses = 0
         for step, batch in enumerate(eval_dataloader):
             batch["input_ids"] = batch["input_ids"].to(torch.int64)
-            batch["attention_mask"] = batch["attention_mask"].to(torch.int64)
+            batch["attention_mask"] = batch["attention_mask"].to(torch.bool)
             batch["labels"] = batch["labels"].to(torch.int64)
             batch = to_device(batch, device)
             with torch.no_grad():

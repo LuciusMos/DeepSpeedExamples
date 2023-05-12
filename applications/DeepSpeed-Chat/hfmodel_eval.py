@@ -26,7 +26,7 @@ model_name = "FreedomIntelligence/phoenix-inst-chat-7b"
 
 if __name__ == '__main__':
     device = torch.device("cuda:0")
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, fast_tokenizer=True, trust_remote_code=True)
     model = model_dict[model_name]["model"].from_pretrained(
         model_name,
         trust_remote_code=True,
@@ -38,8 +38,12 @@ if __name__ == '__main__':
             response, history = model.chat(tokenizer, prompt, history=[])
         elif model_name == "FreedomIntelligence/phoenix-inst-chat-7b":
             inputs = tokenizer(prompt, return_tensors="pt").to(device)
-            response = model.generate(inputs.input_ids)
+            generate_ids = model.generate(inputs.input_ids)
+            response = tokenizer.batch_decode(generate_ids,
+                                              skip_special_tokens=False,
+                                              clean_up_tokenization_spaces=False)
         print('=' * 20)
         print("问题：", prompt)
+        print()
         print("回答：", response)
         print()
