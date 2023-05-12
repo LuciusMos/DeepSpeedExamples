@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer, AutoModel, AutoModelForCausalLM
+import torch
 
 prompts = [
     "介绍一下快手这家公司",
@@ -24,6 +25,7 @@ model_dict = {
 model_name = "FreedomIntelligence/phoenix-inst-chat-7b"
 
 if __name__ == '__main__':
+    device = torch.device("cuda:0")
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     model = model_dict[model_name]["model"].from_pretrained(
         model_name,
@@ -32,7 +34,11 @@ if __name__ == '__main__':
     ).half().cuda()
     model = model.eval()
     for prompt in prompts:
-        response, history = model.chat(tokenizer, prompt, history=[])
+        if model_name == "THUDM/chatglm-6b":
+            response, history = model.chat(tokenizer, prompt, history=[])
+        elif model_name == "FreedomIntelligence/phoenix-inst-chat-7b":
+            inputs = tokenizer(prompt, return_tensors="pt").to(device)
+            response = model.generate(inputs.input_ids)
         print('=' * 20)
         print("问题：", prompt)
         print("回答：", response)
