@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument(
         "--test_sample_num",
         type=int,
-        default=30,
+        default=-1,
         help='How many samples will be used for testing. [-1 means ALL samples]',
     )
     parser.add_argument(
