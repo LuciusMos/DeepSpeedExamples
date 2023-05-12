@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoModelForCausalLM
 
 prompts = [
     "介绍一下快手这家公司",
@@ -16,13 +16,20 @@ prompts = [
     "苹果配件全家桶，让你体验磁吸无线充的快乐！关键才200就可拿下！# 苹果配件#手机配件#数码产品 华强北六件套全新升级，理想好货 买到就是赚到！ 苹果六件套全新升级，理想好货，买到就是赚到！#苹果配件/数码配件 新升级六件套，这一套你想要的它都有，只要200轻松拿下#苹果配件/数码产品 好货买到就是赚到！ 苹果配件全新升级，超值好货，买到就是赚到！ 理想好货，买到就是赚到！提取上文关键词：",  # noqa
 ]
 
-model_name = "THUDM/chatglm-6b"
-# model_name = "FreedomIntelligence/phoenix-inst-chat-7b"
+model_dict = {
+    "THUDM/chatglm-6b": {"model": AutoModel},
+    "FreedomIntelligence/phoenix-inst-chat-7b": {"model": AutoModelForCausalLM},
+}
+# model_name = "THUDM/chatglm-6b"
+model_name = "FreedomIntelligence/phoenix-inst-chat-7b"
 
 if __name__ == '__main__':
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModel.from_pretrained(model_name, trust_remote_code=True,
-                                      cache_dir='/data/zhaoliangxuan/model_zoo').half().cuda()
+    tokenizer = AutoTokenizer.from_pretrained(model_dict[model_name], trust_remote_code=True)
+    model = model_dict[model_name]["model"].from_pretrained(
+        model_name,
+        trust_remote_code=True,
+        cache_dir='/data/zhaoliangxuan/model_zoo'
+    ).half().cuda()
     model = model.eval()
     for prompt in prompts:
         response, history = model.chat(tokenizer, prompt, history=[])
